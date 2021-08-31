@@ -98,9 +98,9 @@ Otherwise throw an error if PATH exists."
        (prog1
            (with-temp-file ,file
              (insert ,(plist-get args :contents))
-             ,(unless (and (plist-member args :point)
-                           (null (plist-get args :point)))
-                `(yod--position-point ,(or (plist-get args :point) "|")))
+             ,@(unless (and (plist-member args :point)
+                            (null (plist-get args :point)))
+                 `((yod--position-point ,(or (plist-get args :point) "|"))))
              ,@(when (plist-get args :then*)
                  `((progn ,@(plist-get args :then*)))))
          ,@(unless (plist-get args :save) `((delete-file ,file)))))))
