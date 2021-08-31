@@ -51,8 +51,9 @@
 (defun yod--position-point (indicator)
   "Replace point INDICATOR with actual point."
   (goto-char (point-min))
-  (re-search-forward indicator nil 'noerror)
-  (replace-match ""))
+  (if (re-search-forward indicator nil 'noerror)
+      (replace-match "")
+    (goto-char (point-min))))
 
 (defmacro yod-file (&rest args)
   "ARGS."
