@@ -71,7 +71,8 @@ An explicitly nil value will prevent the point from being searched for.
 :contents
 
 A string which is inserted into the file's buffer.
-The first reference to :point is replaced and point is positioned there.
+The first :point indicator is replaced and point is positioned there.
+If no :point indicator is found, point is positioned at `point-min'.
 
 :then*
 
