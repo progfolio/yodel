@@ -55,13 +55,44 @@
       (replace-match "")
     (goto-char (point-min))))
 
-(defmacro yod-file (&rest args)
-  "ARGS."
+(defmacro yod-file (path &rest args)
+  "Create file at PATH and manipulate it according to ARGS.
+If PATH is nil, a temporary file is created via `make-temp-file'.
+ARGS must be a plist* with any of the following keys:
+
+:point
+
+A regexp representing the initial point position in file's buffer.
+It defaults to \"|\".
+An explicitly nil value will prevent the point from being searched for.
+
+:contents
+
+A string which is inserted into the file's buffer.
+The first reference to :point is replaced and point is positioned there.
+
+:then*
+
+Any number of forms which will be executed within the buffer.
+The result of the last form is returned.
+
+:save
+
+If this is non-nil, the file is saved to PATH.
+Otherwise it is deleted."
+  (declare (indent 1))
   (setq args (yod-plist*-to-plist args))
-  `(with-temp-buffer
-     (insert ,(plist-get args :contents))
-     (yod--position-point ,(or (plist-get args :point) "|"))
-     (progn ,@(plist-get args :then*))))
+  (let ((file (make-symbol "file")))
+    `(let ((,file (expand-file-name ,(or path (make-temp-file "yod-")))))
+       (with-temp-file ,file
+         (insert ,(plist-get args :contents))
+         ,(unless (and (plist-member args :point)
+                       (null (plist-get args :point)))
+            `(yod--position-point ,(or (plist-get args :point) "|")))
+         (prog1
+             (progn ,@(plist-get args :then*))
+           ,(unless (plist-get args :save)
+              `(delete-file ,file)))))))
 
 (provide 'yod)
 ;;; yod.el ends here
