@@ -91,7 +91,9 @@ Otherwise throw an error if PATH exists."
   (declare (indent 1))
   (setq args (yod-plist*-to-plist args))
   (let ((file (make-symbol "file")))
-    `(let ((,file (expand-file-name ,(or path (make-temp-file "yod-")))))
+    `(let ((,file (expand-file-name
+                   ,(or path '(make-temp-name "yod-"))
+                   ,@(unless path '((temporary-file-directory))))))
        ,@(unless (plist-get args :overwrite)
            `((when (file-exists-p ,file)
                (user-error "Cannot overwrite existing file: %S" ,file))))
