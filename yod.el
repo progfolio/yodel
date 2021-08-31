@@ -84,15 +84,19 @@ Otherwise it is deleted."
   (setq args (yod-plist*-to-plist args))
   (let ((file (make-symbol "file")))
     `(let ((,file (expand-file-name ,(or path (make-temp-file "yod-")))))
+       ,@(unless (plist-get args :overwrite)
+           `((when (file-exists-p ,file)
+               (user-error "Cannot overwrite existing file: %S" ,file))))
        (with-temp-file ,file
          (insert ,(plist-get args :contents))
          ,(unless (and (plist-member args :point)
                        (null (plist-get args :point)))
             `(yod--position-point ,(or (plist-get args :point) "|")))
          (prog1
-             (progn ,@(plist-get args :then*))
-           ,(unless (plist-get args :save)
-              `(delete-file ,file)))))))
+             ,@(when (plist-get args :then*)
+                 `((progn ,@(plist-get args :then*))))
+           ,@(unless (plist-get args :save)
+               `((delete-file ,file))))))))
 
 (provide 'yod)
 ;;; yod.el ends here
