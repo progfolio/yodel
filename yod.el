@@ -40,12 +40,14 @@
       (if (keywordp el)
           (setq variadic (string-suffix-p "*" (symbol-name el))
                 keyword el)
-        (setq plist (plist-put plist keyword
-                               (if variadic
-                                   (append (plist-get plist keyword) (list el))
-                                 (unless (keywordp last)
-                                   (error "Non-variadic key \"%S\" associated with more than one value" keyword))
-                                 el))))
+        (setq plist
+              (plist-put
+               plist keyword
+               (if variadic
+                   (append (plist-get plist keyword) (list el))
+                 (unless (keywordp last)
+                   (error "Non-variadic key \"%S\" passed more than one value" keyword))
+                 el))))
       (setq last el))))
 
 (defun yod--position-point (indicator)
