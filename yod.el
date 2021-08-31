@@ -79,7 +79,12 @@ The result of the last form is returned.
 :save
 
 If this is non-nil, the file is saved to PATH.
-Otherwise it is deleted."
+Otherwise it is deleted.
+
+:overwrite
+
+If this is non-nil, allow overwriting PATH.
+Otherwise throw an error if PATH exists."
   (declare (indent 1))
   (setq args (yod-plist*-to-plist args))
   (let ((file (make-symbol "file")))
