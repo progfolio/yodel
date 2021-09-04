@@ -1,4 +1,4 @@
-;;; yod.el --- communicable elisp                    -*- lexical-binding: t; -*-
+;;; yod.el --- Communicable Elisp                    -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021 Nicholas Vollmer
 
