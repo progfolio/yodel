@@ -25,13 +25,18 @@
 ;;; Code:
 (require 'cl-lib)
 
+(defgroup yodel nil
+  "Communicable Elisp."
+  :group 'yodel
+  :prefix "yodel-")
+
 ;; A variadic plist is a strict subset of a plist.
 ;; Its keys must be keywords, its values may not be keywords.
 ;; Empty keys are ignored.
 ;; If a key is declared multiple times, it's last declaration is returned.
 ;; If a keyword ends with "*" all values until the next keyword
 ;; are associated with it in a list.
-(defun yod-plist*-to-plist (plist*)
+(defun yodel-plist*-to-plist (plist*)
   "Convert PLIST* to plist."
   (let (plist variadic keyword last)
     (unless (keywordp (car plist*))
@@ -50,14 +55,14 @@
                  el))))
       (setq last el))))
 
-(defun yod--position-point (indicator)
+(defun yodel--position-point (indicator)
   "Replace point INDICATOR with actual point."
   (goto-char (point-min))
   (if (re-search-forward indicator nil 'noerror)
       (replace-match "")
     (goto-char (point-min))))
 
-(defmacro yod-file (path &rest args)
+(defmacro yodel-file (path &rest args)
   "Create file at PATH and manipulate it according to ARGS.
 If PATH is nil, a temporary file is created via `make-temp-file'.
 ARGS must be a plist* with any of the following keys:
@@ -89,10 +94,10 @@ Otherwise it is deleted.
 If this is non-nil, allow overwriting PATH.
 Otherwise throw an error if PATH exists."
   (declare (indent 1))
-  (setq args (yod-plist*-to-plist args))
+  (setq args (yodel-plist*-to-plist args))
   (let ((file (make-symbol "file")))
     `(let ((,file (expand-file-name
-                   ,(or path '(make-temp-name "yod-"))
+                   ,(or path '(make-temp-name "yodel-"))
                    ,@(unless path '((temporary-file-directory))))))
        ,@(unless (plist-get args :overwrite)
            `((when (file-exists-p ,file)
@@ -102,7 +107,7 @@ Otherwise throw an error if PATH exists."
              (insert ,(plist-get args :contents))
              ,@(unless (and (plist-member args :point)
                             (null (plist-get args :point)))
-                 `((yod--position-point ,(or (plist-get args :point) "|"))))
+                 `((yodel--position-point ,(or (plist-get args :point) "|"))))
              ,@(when (plist-get args :then*)
                  `((progn ,@(plist-get args :then*)))))
          ,@(unless (plist-get args :save) `((delete-file ,file)))))))
