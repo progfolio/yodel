@@ -107,5 +107,5 @@ Otherwise throw an error if PATH exists."
                  `((progn ,@(plist-get args :then*)))))
          ,@(unless (plist-get args :save) `((delete-file ,file)))))))
 
-(provide 'yod)
+(provide 'yodel)
 ;;; yod.el ends here
