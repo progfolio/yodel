@@ -82,6 +82,7 @@ If no :point indicator is found, point is positioned at `point-min'.
 :then*
 
 Any number of forms which will be executed within the buffer.
+The file has been written at this point.
 The result of the last form is returned.
 
 :save
@@ -98,7 +99,6 @@ Otherwise throw an error if PATH exists."
          (args (yodel-plist*-to-plist (if pathp args `(,path ,@args))))
          (point (plist-get args :point))
          (then* (plist-get args :then*))
-         (finally* (plist-get args :finally*))
          (file (make-symbol "file"))
          (return (make-symbol "return"))
          (buffer (make-symbol "buffer")))
@@ -115,9 +115,8 @@ Otherwise throw an error if PATH exists."
                `((insert ,contents)))
            ,@(unless (and point (null point))
                `((yodel--position-point ,(or point "|"))))
+           (write-file ,file)
            ,@(when then* `((setq ,return (progn ,@then*))))
-           ,@(when finally* `((write-file ,file)
-                              (setq ,return (progn ,@finally*))))
            ,@(unless (plist-get args :save)
                `((when (buffer-name ,buffer)
                    (with-current-buffer ,buffer
