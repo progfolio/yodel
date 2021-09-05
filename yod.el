@@ -105,7 +105,8 @@ Otherwise throw an error if PATH exists."
     (unless pathp (setq path nil))
     `(let ((,file (expand-file-name
                    ,(or path '(make-temp-name "yodel-"))
-                   ,@(unless path '((temporary-file-directory))))))
+                   ,@(unless path '((temporary-file-directory)))))
+           ,return)
        ,@(unless (plist-get args :overwrite)
            `((when (file-exists-p ,file)
                (user-error "Cannot overwrite existing file: %S" ,file))))
