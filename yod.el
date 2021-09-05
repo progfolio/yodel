@@ -94,23 +94,37 @@ Otherwise it is deleted.
 If this is non-nil, allow overwriting PATH.
 Otherwise throw an error if PATH exists."
   (declare (indent 1))
-  (setq args (yodel-plist*-to-plist args))
-  (let ((file (make-symbol "file")))
+  (let* ((pathp (or (stringp path) (null path)))
+         (args (yodel-plist*-to-plist (if pathp args `(,path ,@args))))
+         (point (plist-get args :point))
+         (then* (plist-get args :then*))
+         (finally* (plist-get args :finally*))
+         (file (make-symbol "file"))
+         (return (make-symbol "return"))
+         (buffer (make-symbol "buffer")))
+    (unless pathp (setq path nil))
     `(let ((,file (expand-file-name
                    ,(or path '(make-temp-name "yodel-"))
                    ,@(unless path '((temporary-file-directory))))))
        ,@(unless (plist-get args :overwrite)
            `((when (file-exists-p ,file)
                (user-error "Cannot overwrite existing file: %S" ,file))))
-       (prog1
-           (with-temp-file ,file
-             (insert ,(plist-get args :contents))
-             ,@(unless (and (plist-member args :point)
-                            (null (plist-get args :point)))
-                 `((yodel--position-point ,(or (plist-get args :point) "|"))))
-             ,@(when (plist-get args :then*)
-                 `((progn ,@(plist-get args :then*)))))
-         ,@(unless (plist-get args :save) `((delete-file ,file)))))))
+       (let ((,buffer (find-file-noselect ,file)))
+         (with-current-buffer ,buffer
+           ,@(when-let ((contents (plist-get args :contents)))
+               `((insert ,contents)))
+           ,@(unless (and point (null point))
+               `((yodel--position-point ,(or point "|"))))
+           ,@(when then* `((setq ,return (progn ,@then*))))
+           ,@(when finally* `((write-file ,file)
+                              (setq ,return (progn ,@finally*))))
+           ,@(unless (plist-get args :save)
+               `((when (buffer-name ,buffer)
+                   (with-current-buffer ,buffer
+                     (set-buffer-modified-p nil)
+                     (kill-buffer ,buffer)))
+                 (delete-file ,file)))))
+       ,return)))
 
 (provide 'yodel)
 ;;; yod.el ends here
