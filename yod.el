@@ -88,7 +88,7 @@ The result of the last form is returned.
 :save
 
 If this is non-nil, the file is saved to PATH.
-Otherwise it is deleted.
+Otherwise it is deleted after `yodel-file' finishes running.
 
 :overwrite
 
