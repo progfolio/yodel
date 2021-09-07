@@ -82,7 +82,7 @@ If no :point indicator is found, point is positioned at `point-min'.
 :then*
 
 Any number of forms which will be executed within the buffer.
-The file has been written at this point.
+The file's intial :contents has been written at this point.
 The result of the last form is returned.
 
 :save
