@@ -94,7 +94,7 @@ Otherwise it is deleted after `yodel-file' finishes running.
 
 If this is non-nil, allow overwriting PATH.
 Otherwise throw an error if PATH exists."
-  (declare (indent 1))
+  (declare (indent defun))
   (let* ((pathp (or (stringp path) (null path)))
          (args (yodel-plist*-to-plist (if pathp args `(,path ,@args))))
          (point (plist-get args :point))
