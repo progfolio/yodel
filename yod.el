@@ -62,6 +62,7 @@
       (replace-match "")
     (goto-char (point-min))))
 
+;;;###autoload
 (defmacro yodel-file (path &rest args)
   "Create file at PATH and manipulate it according to ARGS.
 If PATH is nil, a temporary file is created via `make-temp-file'.
