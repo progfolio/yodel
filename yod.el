@@ -116,7 +116,8 @@ Otherwise throw an error if PATH exists."
                `((insert ,contents)))
            ,@(unless (and point (null point))
                `((yodel--position-point ,(or point "|"))))
-           (write-file ,file)
+           ;;Avoding write-file because it will add a final newline
+           (write-region (point-min) (point-max) ,file)
            ,@(when then* `((setq ,return (progn ,@then*))))
            ,@(unless (plist-get args :save)
                `((when (buffer-name ,buffer)
