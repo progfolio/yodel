@@ -127,7 +127,6 @@ Otherwise throw an error if PATH exists."
                  (delete-file ,file)))))
        ,return)))
 
-
 ;;;###autoload
 (defmacro yodel (&rest args)
   "Test elisp in a clean environment.
