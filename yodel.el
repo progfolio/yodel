@@ -153,8 +153,8 @@ The following anaphoric bindings are available during BODY:
                         "\n#+end_src")))
       "** Environment"
       ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
-                  (list (cons "emacs version" (emacs-version))
-                        (cons "system type" system-type))
+                  (list (cons "=emacs version=" (emacs-version))
+                        (cons "=system type=" system-type))
                   "\n"))
     "\n\n")))
 
