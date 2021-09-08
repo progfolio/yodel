@@ -6,6 +6,7 @@ YODEL REPORT (2021-09-07 22:14:00):
   ;;adding something to the report...
   ;;@TODO: should this should be a macro
   ;; which captures the free variable yodel-args?
+  ;; e.g. (yodel-put :test "Pass")?
   (setq yodel-args (plist-put yodel-args :test "PASS"))
   (yodel-file
     :contents "test: |fail"
