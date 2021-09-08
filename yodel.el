@@ -59,7 +59,7 @@
   :type 'string)
 
 (defvar yodel--default-args `("-Q" "-L" ,(file-name-directory (locate-library "yodel")) "--eval")
-  "Args that are passed to the the Emacs executable when testing.")
+  "Args that are passed to the Emacs executable when testing.")
 
 (defvar yodel--process-buffer "*yodel*"
   "Name of the yodel subprocess buffer.")
@@ -191,7 +191,7 @@ If no :point indicator is found, point is positioned at `point-min'.
 :then*
 
 Any number of forms which will be executed within the buffer.
-The file's intial :contents has been written at this point.
+The file's initial :contents has been written at this point.
 The result of the last form is returned.
 
 :save
@@ -225,7 +225,7 @@ Otherwise throw an error if PATH exists."
                `((insert ,contents)))
            ,@(unless (and point (null point))
                `((yodel--position-point ,(or point "|"))))
-           ;;Avoding write-file because it will add a final newline
+           ;;Avoiding write-file because it will add a final newline
            (write-region (point-min) (point-max) ,file)
            ,@(when then* `((setq ,return (progn ,@then*))))
            ,@(unless (plist-get args :save)
@@ -244,7 +244,7 @@ ARGS may be any of the following keywords and their respective values:
       Forms evaluated before launching Emacs.
 
   - :post* (Form)...
-      Forms evaluated in the testing environment after boostrapping.
+      Forms evaluated in the testing environment after bootstrapping.
 
   - :interactive Boolean
       If nil, the subprocess will immediately exit after the test.
