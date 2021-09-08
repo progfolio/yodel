@@ -442,13 +442,14 @@ locally bound plist, yodel-args."
                                                (replace-regexp-in-string
                                                 "yodel--formatter-" ""
                                                 (symbol-name fn))
-                                               (documentation fn))
+                                               (car (split-string (documentation fn) "\n")))
                                        fn))
                          yodel-formatters))
-                       (selection (completing-read "formatter: "
-                                                   (cl-sort (copy-tree candidates)
-                                                            #'string< :key #'car)
-                                                   nil 'require-match)))
+                       (selection
+                        (completing-read "formatter: "
+                                         (setq candidates
+                                               (cl-sort candidates #'string< :key #'car))
+                                         nil 'require-match)))
                   (alist-get selection candidates nil nil #'equal))))
   (funcall formatter (if (get-buffer yodel--process-buffer)
                          (with-current-buffer yodel--process-buffer
