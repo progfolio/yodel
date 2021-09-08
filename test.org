@@ -1,6 +1,6 @@
 YODEL REPORT (2021-09-07 22:14:00):
 
-#+begin_src emacs-lisp :lexical t
+#+begin_src emacs-lisp :lexical t :results silent
 (yodel
   :post*
   ;;adding something to the report...
@@ -16,9 +16,6 @@ YODEL REPORT (2021-09-07 22:14:00):
     (message "%s" (buffer-string))))
 #+end_src
 
-#+RESULTS:
-: Running yodel in directory: /tmp/yodel-8tgWRD
-
 STDOUT:
 
 #+begin_src emacs-lisp :lexical t
@@ -28,7 +25,7 @@ hi
 STDERR:
 
 #+begin_src emacs-lisp :lexical t
-(void-function fuck)
+(void-function oops)
 #+end_src
 
 - emacs vesrion: GNU Emacs 28.0.50 (build 1, x86_64-pc-linux-gnu, X toolkit, cairo version 1.17.4, Xaw3d scroll bars)
