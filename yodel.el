@@ -64,6 +64,13 @@
 (defvar yodel--process-buffer "*yodel*"
   "Name of the yodel subprocess buffer.")
 
+(defvar yodel-formatters nil
+  "List of yodel report formatting functions.")
+
+(defvar-local yodel--report nil
+  "Report data structure.
+Used for reformatting the report.")
+
 (defun yodel--pretty-print (form)
   "Convert elisp FORM into formatted string."
   (let* ((print-level nil)
@@ -91,36 +98,98 @@
       (indent-region (point-min) (point-max))
       (buffer-substring-no-properties (point-min) (point-max)))))
 
-(defun yodel--format (report)
-  "Format REPORT."
-  (with-current-buffer yodel--process-buffer
-    (goto-char (point-min))
-    (erase-buffer)
-    (when (fboundp 'org-mode) (org-mode))
-    (cl-destructuring-bind (&key stdout stderr report) report
-      (insert
-       (string-join
-        `(,(format "* YODEL REPORT (%s):" (format-time-string "%Y-%m-%d %H:%M:%S"))
-          ,(concat
-            "#+begin_src emacs-lisp :lexical t\n"
-            (yodel--pretty-print (append '(yodel) (plist-get report :yodel-form)))
-            "\n#+end_src")
-          ,@(when stdout
-              (list "** STDOUT:"
-                    (concat "#+begin_src emacs-lisp :lexical t\n"
-                            (string-trim stdout)
-                            "\n#+end_src")))
-          ,@(when stderr
-              (list "** STDERR:"
-                    (concat "#+begin_src emacs-lisp :lexical t\n"
-                            stderr
-                            "\n#+end_src")))
-          "** Environment"
-          ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
-                      (list (cons "emacs vesrion" (emacs-version))
-                            (cons "system type" system-type))
-                      "\n"))
-        "\n\n")))))
+(defmacro yodel-formatter (name description &rest body)
+  "Create a yodel formatting function with BODY and NAME.
+Add the function to `yodel-formatters'.
+Each function should accept a report plist as its sole argument.
+DESCRIPTION is used as the docstring, and when prompting via `yodel-reformat'.
+BODY will be executed in the context of an empty `yodel--process-buffer'.
+`buffer-string' is returned after BODY is executed.
+The following anaphoric bindings are available during BODY:
+
+- stdout: The standard output of the subprocess.
+- stderr: The errors output by the subprocess.
+- report: The report form."
+  (declare (indent defun))
+  (let ((fn (intern (format "yodel--formatter-%s" name))))
+    `(cl-pushnew
+      (defun ,fn (report)
+        ,(replace-regexp-in-string "report" #'upcase description)
+        (cl-destructuring-bind (&key stdout stderr report) report
+          (ignore report stdout stderr) ;no-op here to satisfy byte compiler.
+          (with-current-buffer yodel--process-buffer
+            (erase-buffer)
+            (goto-char (point-min))
+            ,@body
+            (buffer-string))))
+      yodel-formatters)))
+
+(yodel-formatter raw
+  "Format report as a raw, readable plist."
+  (insert (let (print-level print-length)
+            (pp-to-string report))))
+
+(yodel-formatter org
+  "Format REPORT in Org syntax."
+  (when (fboundp 'org-mode) (org-mode))
+  (insert
+   (string-join
+    `(,(format "* YODEL REPORT (%s):" (format-time-string "%Y-%m-%d %H:%M:%S"))
+      ,(concat
+        "#+begin_src emacs-lisp :lexical t\n"
+        (yodel--pretty-print (append '(yodel) (plist-get report :yodel-form)))
+        "\n#+end_src")
+      ,@(when stdout
+          (list "** STDOUT:"
+                (concat "#+begin_src emacs-lisp :lexical t\n"
+                        (string-trim stdout)
+                        "\n#+end_src")))
+      ,@(when stderr
+          (list "** STDERR:"
+                (concat "#+begin_src emacs-lisp :lexical t\n"
+                        stderr
+                        "\n#+end_src")))
+      "** Environment"
+      ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
+                  (list (cons "emacs version" (emacs-version))
+                        (cons "system type" system-type))
+                  "\n"))
+    "\n\n")))
+
+(yodel-formatter reddit-markdown
+  "Format REPORT in reddit flavored markdown."
+  (when (fboundp 'markdown-mode) (markdown-mode))
+  (insert
+   (string-join
+    `(,(format "# [YODEL](https://github.com/progfolio/yodel) REPORT (%s):" (format-time-string "%Y-%m-%d %H:%M:%S"))
+      ,(concat
+        ;;use four spaces because old reddit doesn't render code fences
+        "\n    "
+        (yodel--pretty-print (append '(yodel) (plist-get report :yodel-form)))
+        "\n")
+      ,@(when stdout
+          (list "## STDOUT:"
+                (concat "\n    "
+                        (string-trim stdout)
+                        "\n")))
+      ,@(when stderr
+          (list "## STDERR:"
+                (concat "\n    "
+                        stderr
+                        "\n")))
+      "## Environment"
+      ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
+                  (list (cons "emacs version" (emacs-version))
+                        (cons "system type" system-type))
+                  "\n"))
+    "\n\n")))
+
+(declare-function yodel--formatter-org "yodel")
+(declare-function yodel--formatter-raw "yodel")
+(declare-function yodel--formatter-reddit-markdown "yodel")
+(defcustom yodel-default-formatter #'yodel--formatter-org
+  "Default report formatting function."
+  :type 'function)
 
 ;; A variadic plist is a strict subset of a plist.
 ;; Its keys must be keywords, its values may not be keywords.
@@ -290,6 +359,7 @@ locally bound plist, yodel-args."
                               (make-temp-file "yodel-" 'directory)))
          (executable        (or (plist-get args :executable)
                                 (concat invocation-directory invocation-name)))
+         (declared-formatter (plist-get args :formatter))
          ;; Construct metaprogram to be evaluated by subprocess
          (metaprogram       (let ((print-level  nil)
                                   (print-length nil))
@@ -328,7 +398,8 @@ locally bound plist, yodel-args."
             (,emacs-executable  ,executable)
             (,emacs-args-symbol (append (unless ,interactive '("--batch")) ',yodel--default-args))
             (,raw               ,(plist-get args :raw))
-            (,formatter         #',(or (plist-get args :formatter) 'yodel--format))
+            (,formatter         ,(or declared-formatter
+                                     '(or yodel-default-formatter #'yodel--formatter-raw)))
             (,program           ,metaprogram)
             (,emacs-dir         ,user-dir))
        ;; Reset process buffer.
@@ -343,7 +414,12 @@ locally bound plist, yodel-args."
         (lambda (process _event)
           (unless ,interactive
             (when (memq (process-status process) '(exit signal))
-              (unless ,raw (funcall ,formatter (yodel--report)))
+              (unless ,raw
+                (with-current-buffer yodel--process-buffer
+                  (setq yodel--report (yodel--report))
+                  ;;Necessary to preserve if major mode changes
+                  (put 'yodel--report 'permanent-local t)
+                  (funcall ,formatter yodel--report)))
               (run-with-idle-timer 1 nil (lambda () (display-buffer yodel--process-buffer)))
               (unless ,preserve-files
                 (when (file-exists-p ,emacs-dir)
