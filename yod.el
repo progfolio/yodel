@@ -19,8 +19,27 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-
+;; The purpose of this package is to make it easier to send bug reproduction
+;; cases. Often on a mailing list or forge issue, I see people type out a series
+;; of instructions which follow a common pattern:
 ;;
+;; Given file "foo" with the following contents:
+;;
+;; %-----cut---start-----%
+;; foo bar baz
+;; %-----cut---end-------%
+;;
+;; Execute the following:
+;; 1. do this
+;; 2. do that
+;; 3. do this
+;;
+;; This is error prone and inefficient. It requires anyone on the other end to
+;; prepare the enviornment (in this case a file) and manually execute the
+;; reproduction steps. Yodel allows one to send a declarative form which describes
+;; the environment and a program to execute within that environment. Others may
+;; execute the form on their system and compare results easily via a consistently
+;; formatted report.
 
 ;;; Code:
 (require 'cl-lib)
