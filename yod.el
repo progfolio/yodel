@@ -3,7 +3,11 @@
 ;; Copyright (C) 2021 Nicholas Vollmer
 
 ;; Author:  Nicholas Vollmer
+;; URL: https://github.com/progfolio/yodel
+;; Created: August 30, 2021
 ;; Keywords: convenience
+;; Package-Requires: ((emacs "26.1"))
+;; Version: 0.0.0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
