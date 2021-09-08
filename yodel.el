@@ -58,7 +58,7 @@
   "String denoting end of process output and start of report form."
   :type 'string)
 
-(defvar yodel--default-args `("-Q" "-L" ,(file-name-directory (locate-library "yod")) "--eval")
+(defvar yodel--default-args `("-Q" "-L" ,(file-name-directory (locate-library "yodel")) "--eval")
   "Args that are passed to the the Emacs executable when testing.")
 
 (defvar yodel--process-buffer "*yodel*"
