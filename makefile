@@ -3,7 +3,7 @@
 #$ export EMACS=<desired Emacs executable>
 #$ make -e
 EMACS = emacs
-PKG = yod
+PKG = yodel
 
 #Point to path of your local emacs-buttercup install
 BUTTERCUP = ../emacs-buttercup/
