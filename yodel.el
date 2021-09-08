@@ -168,7 +168,7 @@ The following anaphoric bindings are available during BODY:
         "\n"
         ;;use four spaces because old reddit doesn't render code fences
         (mapconcat (lambda (s) (format "    %s" s))
-                   (split-string (yodel--pretty-print (plist-get report :yodel-form)))
+                   (split-string (yodel--pretty-print (plist-get report :yodel-form)) "\n")
                    "\n")
         "\n")
       ,@(when stdout
@@ -183,8 +183,8 @@ The following anaphoric bindings are available during BODY:
                         "\n")))
       "## Environment"
       ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
-                  (list (cons "emacs version" (emacs-version))
-                        (cons "system type" system-type))
+                  (list (cons "**emacs version**" (emacs-version))
+                        (cons "**system type**" system-type))
                   "\n"))
     "\n\n")))
 
