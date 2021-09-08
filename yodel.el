@@ -426,6 +426,28 @@ locally bound plist, yodel-args."
                   (delete-directory ,emacs-dir 'recursive)))))))
        (message "Running yodel in directory: %s" ,emacs-dir))))
 
+(defun yodel-reformat (formatter)
+  "Reformat report with FORMATTER function."
+  (interactive (list
+                (let* ((candidates
+                        (mapcar
+                         (lambda (fn) (cons
+                                       (format "%s -> %s"
+                                               (replace-regexp-in-string
+                                                "yodel--formatter-" ""
+                                                (symbol-name fn))
+                                               (documentation fn))
+                                       fn))
+                         yodel-formatters))
+                       (selection (completing-read "formatter: "
+                                                   (cl-sort candidates #'string<)
+                                                   nil 'require-match)))
+                  (alist-get selection candidates nil nil #'equal))))
+  (funcall formatter (if (get-buffer yodel--process-buffer)
+                         (with-current-buffer yodel--process-buffer
+                           yodel--report)
+                       (user-error "%S buffer not live" yodel--process-buffer))))
+
 (provide 'yodel)
 ;;; LocalWords:  subprocess MERCHANTABILITY Vollmer elisp Elisp elpa emacs variadic baz eval plist ARGS args dir src formatter pre namespace metaprogram reddit
 ;;; yodel.el ends here
