@@ -1,1 +1,1 @@
-* Yodel: Communicable Elisp Environments ⛰🎶⛰
+* Yodel: Communicable Elisp ⛰🎶⛰
