@@ -138,7 +138,7 @@ The following anaphoric bindings are available during BODY:
     `(,(format "* YODEL REPORT [%s]" (format-time-string "%Y-%m-%d %H:%M"))
       ,(concat
         "#+begin_src emacs-lisp :lexical t\n"
-        (yodel--pretty-print (append '(yodel) (plist-get report :yodel-form)))
+        (yodel--pretty-print (plist-get report :yodel-form))
         "\n#+end_src")
       ,@(when stdout
           (list "** STDOUT:"
@@ -167,10 +167,7 @@ The following anaphoric bindings are available during BODY:
         "\n"
         ;;use four spaces because old reddit doesn't render code fences
         (mapconcat (lambda (s) (format "    %s" s))
-                   (split-string
-                    (yodel--pretty-print
-                     (append '(yodel) (plist-get report :yodel-form)))
-                    "\n")
+                   (split-string (yodel--pretty-print (plist-get report :yodel-form)))
                    "\n")
         "\n")
       ,@(when stdout
@@ -371,7 +368,9 @@ locally bound plist, yodel-args."
                                   (print-length nil))
                               ;;@IDEA: modify args to ensure we've included default values?
                               ;;or store these in their own :yodel sub-plist?
-                              (setq args (plist-put args :yodel-form (yodel--pretty-print yodel-form))
+                              (setq args (plist-put args :yodel-form
+                                                    (yodel--pretty-print
+                                                     (append '(yodel) yodel-form)))
                                     args (plist-put args :user-dir user-dir)
                                     args (plist-put args :executable executable))
                               (pp-to-string
