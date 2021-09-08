@@ -77,7 +77,7 @@
     (with-temp-buffer
       (insert "(" string ")")
       (goto-char (point-min))
-      ;; Replace dangling parens.
+      ;; Replace dangling parenthesis.
       (save-excursion
         (while (re-search-forward "\\(?:\n[[:space:]]*)\\)" nil 'no-error)
           (replace-match ")")))
