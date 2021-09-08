@@ -351,4 +351,5 @@ locally bound plist, yodel-args."
        (message "Running yodel in directory: %s" ,emacs-dir))))
 
 (provide 'yodel)
+;;; LocalWords:  subprocess MERCHANTABILITY Vollmer elisp Elisp elpa emacs variadic baz eval plist ARGS args dir src formatter pre namespace metaprogram reddit
 ;;; yodel.el ends here
