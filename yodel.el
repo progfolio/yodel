@@ -59,7 +59,7 @@
   :type 'string)
 
 (defvar yodel--default-args `("-Q" "-L" ,(file-name-directory (locate-library "yodel")) "--eval")
-  "Args that are passed to the Emacs executable when testing.")
+  "Arguments passed to the Emacs executable when testing.")
 
 (defvar yodel--process-buffer "*yodel*"
   "Name of the yodel subprocess buffer.")
