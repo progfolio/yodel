@@ -133,7 +133,7 @@ The following anaphoric bindings are available during BODY:
   (when (fboundp 'org-mode) (org-mode))
   (insert
    (string-join
-    `(,(format "* YODEL REPORT (%s):" (format-time-string "%Y-%m-%d %H:%M:%S"))
+    `(,(format "* YODEL REPORT [%s]" (format-time-string "%Y-%m-%d %H:%M"))
       ,(concat
         "#+begin_src emacs-lisp :lexical t\n"
         (yodel--pretty-print (append '(yodel) (plist-get report :yodel-form)))
