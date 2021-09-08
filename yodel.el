@@ -23,8 +23,8 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; The purpose of this package is to make it easier to send bug reproduction
-;; cases. Often on a mailing list or forge issue, I see people type out a series
+;; The purpose of this package is to make it easier to reproduce elisp bugs.
+;; Often on a mailing list or forge issue, I see people type out a series
 ;; of instructions which follow a common pattern:
 ;;
 ;; Given file "foo" with the following contents:
