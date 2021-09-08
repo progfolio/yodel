@@ -74,6 +74,7 @@ Used for reformatting the report.")
   "Convert elisp FORM into formatted string."
   (let* ((print-level nil)
          (print-length nil)
+         (print-quoted t)
          (string (mapconcat
                   (lambda (el)
                     (concat (when (and el (listp el)) "\n")
@@ -162,9 +163,14 @@ The following anaphoric bindings are available during BODY:
    (string-join
     `(,(format "# [YODEL](https://github.com/progfolio/yodel) REPORT (%s):" (format-time-string "%Y-%m-%d %H:%M:%S"))
       ,(concat
+        "\n"
         ;;use four spaces because old reddit doesn't render code fences
-        "\n    "
-        (yodel--pretty-print (append '(yodel) (plist-get report :yodel-form)))
+        (mapconcat (lambda (s) (format "    %s" s))
+                   (split-string
+                    (yodel--pretty-print
+                     (append '(yodel) (plist-get report :yodel-form)))
+                    "\n")
+                   "\n")
         "\n")
       ,@(when stdout
           (list "## STDOUT:"
