@@ -270,7 +270,7 @@ locally bound plist, yodel-args."
          ;; Construct metaprogram to be evaled by subprocess
          (metaprogram       (let ((print-level  nil)
                                   (print-length nil))
-                              ;;modify args to ensure we've included default values?
+                              ;;@IDEA: modify args to ensure we've included default values?
                               ;;or store these in their own :yodel sub-plist?
                               (setq args (plist-put args :yodel-form (yodel--pretty-print yodel-form))
                                     args (plist-put args :user-dir user-dir)
