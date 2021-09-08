@@ -54,9 +54,8 @@
   :group 'yodel
   :prefix "yodel-")
 
-(defcustom yodel-process-end-marker "YODEL--END"
-  "String denoting end of process output and start of report form."
-  :type 'string)
+(defconst yodel--process-end-text "YODEL--PROCESS-END"
+  "String denoting end of process output and start of report form.")
 
 (defvar yodel--default-args `("-Q" "-L" ,(file-name-directory (locate-library "yodel")) "--eval")
   "Arguments passed to the Emacs executable when testing.")
@@ -231,7 +230,7 @@ The following anaphoric bindings are available during BODY:
         (list
          :stdout (let ((stdout (buffer-substring
                                 (point-min)
-                                (and (re-search-forward yodel-process-end-marker)
+                                (and (re-search-forward yodel--process-end-text)
                                      (line-beginning-position)))))
                    (unless (string-empty-p  stdout) stdout))
          :report (and (forward-line) (read (current-buffer)))
@@ -391,7 +390,7 @@ locally bound plist, yodel-args."
                                     (unwind-protect
                                         (progn ,@(plist-get args :post*))
                                       (goto-char (point-max))
-                                      (message "%s" ,yodel-process-end-marker)
+                                      (message "%s" ,yodel--process-end-text)
                                       (message "%s" yodel-args))))))))
     `(let* ((,preserve-files    ,(plist-get args :save))
             (,interactive       ,(plist-get args :interactive))
