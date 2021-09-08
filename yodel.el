@@ -1,4 +1,4 @@
-;;; yod.el --- Communicable Elisp                    -*- lexical-binding: t; -*-
+;;; yodel.el --- Communicable Elisp                    -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021 Nicholas Vollmer
 
@@ -306,7 +306,7 @@ locally bound plist, yodel-args."
                                ;; we are binding with the package namespace, this
                                ;; should not overwrite other user bindings.
                                `(with-demoted-errors "%S"
-                                  (require 'yodel "yod.el")
+                                  (require 'yodel)
                                   ;;@TODO: Rename this to be consistent during runtime
                                   ;; and accessing during the report.
                                   ;; we need to clean up the terminology in general...
@@ -351,4 +351,4 @@ locally bound plist, yodel-args."
        (message "Running yodel in directory: %s" ,emacs-dir))))
 
 (provide 'yodel)
-;;; yod.el ends here
+;;; yodel.el ends here
