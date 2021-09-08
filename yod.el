@@ -131,8 +131,8 @@
       (replace-match "")
     (goto-char (point-min))))
 
-(defun yodel-report ()
-  "Read the report in from `yodel--process-buffer'."
+(defun yodel--report ()
+  "Read the report from `yodel--process-buffer'."
   (if (get-buffer yodel--process-buffer)
       (with-current-buffer yodel--process-buffer
         (goto-char (point-min))
@@ -320,7 +320,7 @@ locally bound plist, yodel-args."
         (lambda (process _event)
           (unless ,interactive
             (when (memq (process-status process) '(exit signal))
-              (unless ,raw (funcall ,formatter (yodel-report)))
+              (unless ,raw (funcall ,formatter (yodel--report)))
               (run-with-idle-timer 1 nil (lambda () (display-buffer yodel--process-buffer)))
               (unless ,preserve-files
                 (when (file-exists-p ,temp-emacs-dir)
