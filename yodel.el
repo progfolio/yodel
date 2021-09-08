@@ -445,7 +445,8 @@ locally bound plist, yodel-args."
                                        fn))
                          yodel-formatters))
                        (selection (completing-read "formatter: "
-                                                   (cl-sort candidates #'string<)
+                                                   (cl-sort (copy-tree candidates)
+                                                            #'string< :key #'car)
                                                    nil 'require-match)))
                   (alist-get selection candidates nil nil #'equal))))
   (funcall formatter (if (get-buffer yodel--process-buffer)
