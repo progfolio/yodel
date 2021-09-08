@@ -1,1 +1,70 @@
 * Yodel: Communicable Elisp ⛰🎶⛰
+** Yodel-ay-hee-why?
+The purpose of this package is to make it easier to send bug reproduction
+cases. Often on a mailing list or forge issue, I see people type out a series
+of instructions which follow a common pattern:
+
+#+begin_example
+Given file "foo" with the following contents:
+
+%-----cut---start-----%
+foo bar baz
+%-----cut---end-------%
+
+Execute the following:
+1. do this
+2. do that
+3. do this
+#+end_example
+
+This is error prone and inefficient. It requires anyone on the other end to
+prepare the environment (in this case a file) and manually execute the
+reproduction steps.
+
+** Yodel-ay-hee-what?
+Yodel allows one to send a declarative form which describes
+the elisp environment and a program to execute within that environment. Others may
+execute the form on their system and compare results easily via consistently
+formatted reports.
+
+For example, evaluating the following:
+
+#+begin_src emacs-lisp :lexical t :results silent
+(yodel
+  :post*
+  (yodel-file
+    :contents "test: |fail"
+    :then*
+    (kill-word 1)
+    (insert "pass")
+    (message "%s" (buffer-string))))
+#+end_src
+
+results in the following report:
+
+#+begin_src org
+,* YODEL REPORT (2021-09-08 01:27:25):
+
+,#+begin_src emacs-lisp :lexical t
+(yodel
+  :post*
+  (yodel-file :contents "test: |fail"
+    :then*
+    (kill-word 1)
+    (insert "pass")
+    (message "%s"
+             (buffer-string))))
+,#+end_src
+
+,** STDOUT:
+
+,#+begin_src emacs-lisp :lexical t
+test: pass
+,#+end_src
+
+,** Environment
+
+- emacs vesrion: GNU Emacs 28.0.50 (build 1, x86_64-pc-linux-gnu, X toolkit, cairo version 1.17.4, Xaw3d scroll bars)
+  of 2021-09-04
+- system type: gnu/linux
+#+end_src
