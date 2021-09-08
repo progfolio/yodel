@@ -71,3 +71,9 @@ test: pass
   of 2021-09-04
 - system type: gnu/linux
 #+end_src
+
+Reformatting reports is as easy as =M-x yodel-reformat=.
+
+** NOTICE
+Yodel is still in early development.
+API is experimental at this time.
