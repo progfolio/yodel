@@ -113,6 +113,7 @@ The following anaphoric bindings are available during BODY:
 - report: The report form."
   (declare (indent defun))
   (let ((fn (intern (format "yodel--formatter-%s" name))))
+    (when (fboundp fn) (makunbound fn))
     `(cl-pushnew
       (defun ,fn (report)
         ,(replace-regexp-in-string "report" #'upcase description)
