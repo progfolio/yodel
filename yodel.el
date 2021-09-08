@@ -290,7 +290,7 @@ locally bound plist, yodel-args."
                               (make-temp-file "yodel-" 'directory)))
          (executable        (or (plist-get args :executable)
                                 (concat invocation-directory invocation-name)))
-         ;; Construct metaprogram to be evaled by subprocess
+         ;; Construct metaprogram to be evaluated by subprocess
          (metaprogram       (let ((print-level  nil)
                                   (print-length nil))
                               ;;@IDEA: modify args to ensure we've included default values?
