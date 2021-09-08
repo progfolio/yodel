@@ -39,7 +39,7 @@
 ;; 3. do this
 ;;
 ;; This is error prone and inefficient. It requires anyone on the other end to
-;; prepare the enviornment (in this case a file) and manually execute the
+;; prepare the environment (in this case a file) and manually execute the
 ;; reproduction steps. Yodel allows one to send a declarative form which describes
 ;; the environment and a program to execute within that environment. Others may
 ;; execute the form on their system and compare results easily via a consistently
