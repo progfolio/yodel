@@ -262,44 +262,44 @@ locally bound plist, yodel-args."
          (program           (make-symbol "program"))
          (yodel-form        args)
          (args              (yodel-plist*-to-plist args))
-         (temp-dir (if-let ((dir (plist-get args :user-dir)))
-                       (expand-file-name dir temporary-file-directory)
-                     (make-temp-file "yodel-" 'directory)))
-         (executable (or (plist-get args :executable)
-                         (concat invocation-directory invocation-name)))
+         (temp-dir          (if-let ((dir (plist-get args :user-dir)))
+                                (expand-file-name dir temporary-file-directory)
+                              (make-temp-file "yodel-" 'directory)))
+         (executable        (or (plist-get args :executable)
+                                (concat invocation-directory invocation-name)))
          ;; Construct metaprogram to be evaled by subprocess
-         (metaprogram (let ((print-level  nil)
-                            (print-length nil))
-                        ;;modify args to ensure we've included default values?
-                        ;;or store these in their own :yodel sub-plist?
-                        (setq args (plist-put args :yodel-form (yodel--pretty-print yodel-form))
-                              args (plist-put args :user-dir temp-dir)
-                              args (plist-put args :executable executable))
-                        (pp-to-string
-                         ;; The top-level `let' is an intentional local
-                         ;; variable binding. We want users of
-                         ;; `yodel' to have access to their
-                         ;; args within :pre*/:post* programs. Since
-                         ;; we are binding with the package namespace, this
-                         ;; should not overwrite other user bindings.
-                         `(with-demoted-errors "%S"
-                            (require 'yodel "yod.el")
-                            ;;@TODO: Rename this to be consistent during runtime
-                            ;; and accessing during the report.
-                            ;; we need to clean up the terminology in general...
-                            (let ((yodel-args ',args))
-                              (setq user-emacs-directory ,temp-dir
-                                    default-directory    ,temp-dir
-                                    server-name          ,temp-dir
-                                    package-user-dir     (expand-file-name "elpa" ,temp-dir))
-                              ;;@TODO: this needs to be earlier
-                              ;; Do we need to create the user dir prior to running this?:
-                              ;;(plist-get keywords :pre*)
-                              (unwind-protect
-                                  (progn ,@(plist-get args :post*))
-                                (goto-char (point-max))
-                                (message "%s" ,yodel-process-end-marker)
-                                (message "%s" yodel-args))))))))
+         (metaprogram       (let ((print-level  nil)
+                                  (print-length nil))
+                              ;;modify args to ensure we've included default values?
+                              ;;or store these in their own :yodel sub-plist?
+                              (setq args (plist-put args :yodel-form (yodel--pretty-print yodel-form))
+                                    args (plist-put args :user-dir temp-dir)
+                                    args (plist-put args :executable executable))
+                              (pp-to-string
+                               ;; The top-level `let' is an intentional local
+                               ;; variable binding. We want users of
+                               ;; `yodel' to have access to their
+                               ;; args within :pre*/:post* programs. Since
+                               ;; we are binding with the package namespace, this
+                               ;; should not overwrite other user bindings.
+                               `(with-demoted-errors "%S"
+                                  (require 'yodel "yod.el")
+                                  ;;@TODO: Rename this to be consistent during runtime
+                                  ;; and accessing during the report.
+                                  ;; we need to clean up the terminology in general...
+                                  (let ((yodel-args ',args))
+                                    (setq user-emacs-directory ,temp-dir
+                                          default-directory    ,temp-dir
+                                          server-name          ,temp-dir
+                                          package-user-dir     (expand-file-name "elpa" ,temp-dir))
+                                    ;;@TODO: this needs to be earlier
+                                    ;; Do we need to create the user dir prior to running this?:
+                                    ;;(plist-get keywords :pre*)
+                                    (unwind-protect
+                                        (progn ,@(plist-get args :post*))
+                                      (goto-char (point-max))
+                                      (message "%s" ,yodel-process-end-marker)
+                                      (message "%s" yodel-args))))))))
     `(let* ((,preserve-files    ,(plist-get args :save))
             (,interactive       ,(plist-get args :interactive))
             (,emacs-executable  ,executable)
