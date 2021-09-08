@@ -95,7 +95,8 @@ Used for reformatting the report.")
       ;; Remove empty lines.
       (flush-lines "\\(?:^[[:space:]]*$\\)")
       (emacs-lisp-mode)
-      (indent-region (point-min) (point-max))
+      (let ((inhibit-message t))
+        (indent-region (point-min) (point-max)))
       (buffer-substring-no-properties (point-min) (point-max)))))
 
 (defmacro yodel-formatter (name description &rest body)
