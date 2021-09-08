@@ -253,7 +253,7 @@ locally bound plist, yodel-args."
   (unless lexical-binding
     (user-error "Lexical binding required for yodel"))
   (let* ((preserve-files    (make-symbol "preserve-files"))
-         (temp-emacs-dir    (make-symbol "temp-emacs-dir"))
+         (emacs-dir         (make-symbol "emacs-dir"))
          (interactive       (make-symbol "interactive"))
          (emacs-args-symbol (make-symbol "emacs-args"))
          (emacs-executable  (make-symbol "emacs-executable"))
@@ -262,7 +262,7 @@ locally bound plist, yodel-args."
          (program           (make-symbol "program"))
          (yodel-form        args)
          (args              (yodel-plist*-to-plist args))
-         (temp-dir          (if-let ((dir (plist-get args :user-dir)))
+         (user-dir          (if-let ((dir (plist-get args :user-dir)))
                                 (expand-file-name dir temporary-file-directory)
                               (make-temp-file "yodel-" 'directory)))
          (executable        (or (plist-get args :executable)
@@ -273,7 +273,7 @@ locally bound plist, yodel-args."
                               ;;modify args to ensure we've included default values?
                               ;;or store these in their own :yodel sub-plist?
                               (setq args (plist-put args :yodel-form (yodel--pretty-print yodel-form))
-                                    args (plist-put args :user-dir temp-dir)
+                                    args (plist-put args :user-dir user-dir)
                                     args (plist-put args :executable executable))
                               (pp-to-string
                                ;; The top-level `let' is an intentional local
@@ -288,10 +288,10 @@ locally bound plist, yodel-args."
                                   ;; and accessing during the report.
                                   ;; we need to clean up the terminology in general...
                                   (let ((yodel-args ',args))
-                                    (setq user-emacs-directory ,temp-dir
-                                          default-directory    ,temp-dir
-                                          server-name          ,temp-dir
-                                          package-user-dir     (expand-file-name "elpa" ,temp-dir))
+                                    (setq user-emacs-directory ,user-dir
+                                          default-directory    ,user-dir
+                                          server-name          ,user-dir
+                                          package-user-dir     (expand-file-name "elpa" ,user-dir))
                                     ;;@TODO: this needs to be earlier
                                     ;; Do we need to create the user dir prior to running this?:
                                     ;;(plist-get keywords :pre*)
@@ -307,7 +307,7 @@ locally bound plist, yodel-args."
             (,raw               ,(plist-get args :raw))
             (,formatter         #',(or (plist-get args :formatter) 'yodel--format))
             (,program           ,metaprogram)
-            (,temp-emacs-dir    ,temp-dir))
+            (,emacs-dir         ,user-dir))
        ;; Reset process buffer.
        (with-current-buffer (get-buffer-create yodel--process-buffer)
          (fundamental-mode)
@@ -323,9 +323,9 @@ locally bound plist, yodel-args."
               (unless ,raw (funcall ,formatter (yodel--report)))
               (run-with-idle-timer 1 nil (lambda () (display-buffer yodel--process-buffer)))
               (unless ,preserve-files
-                (when (file-exists-p ,temp-emacs-dir)
-                  (delete-directory ,temp-emacs-dir 'recursive)))))))
-       (message "Running yodel in directory: %s" ,temp-emacs-dir))))
+                (when (file-exists-p ,emacs-dir)
+                  (delete-directory ,emacs-dir 'recursive)))))))
+       (message "Running yodel in directory: %s" ,emacs-dir))))
 
 (provide 'yodel)
 ;;; yod.el ends here
