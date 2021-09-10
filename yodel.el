@@ -165,32 +165,27 @@ The following anaphoric bindings are available during BODY:
   (yodel-formatter reddit-markdown
     "Format REPORT in reddit flavored markdown."
     (when (fboundp 'markdown-mode) (markdown-mode))
-    (insert
-     (string-join
-      `(,(format "# [YODEL](https://github.com/progfolio/yodel) REPORT (%s):" (format-time-string "%Y-%m-%d %H:%M:%S"))
-        ,(concat
-          "\n"
-          ;;use four spaces because old reddit doesn't render code fences
-          (mapconcat (lambda (s) (format "    %s" s))
-                     (split-string (yodel--pretty-print (plist-get report :yodel-form)) "\n")
-                     "\n")
-          "\n")
-        ,@(when stdout
-            (list "## STDOUT:"
-                  (concat "\n    "
-                          (string-trim stdout)
-                          "\n")))
-        ,@(when stderr
-            (list "## STDERR:"
-                  (concat "\n    "
-                          stderr
-                          "\n")))
-        "## Environment"
-        ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
-                    (list (cons "**emacs version**" (emacs-version))
-                          (cons "**system type**" system-type))
-                    "\n"))
-      "\n\n"))))
+    (cl-flet ((indent (s) (with-temp-buffer
+                            (insert s)
+                            (let ((fill-prefix "    "))
+                              (indent-region (point-min) (point-max)))
+                            (buffer-string))))
+      (insert
+       (string-join
+        `(,(format "# [YODEL](https://github.com/progfolio/yodel) REPORT (%s):" (format-time-string "%Y-%m-%d %H:%M:%S"))
+          ,(concat
+            "\n"
+            ;;use four spaces because old reddit doesn't render code fences
+            (indent (yodel--pretty-print (plist-get report :yodel-form)))
+            "\n")
+          ,@(when stdout (list "## STDOUT:" (concat "\n" (indent stdout) "\n")))
+          ,@(when stderr (list "## STDERR:" (concat "\n" (indent stderr) "\n")))
+          "## Environment"
+          ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
+                      (list (cons "**emacs version**" (emacs-version))
+                            (cons "**system type**" system-type))
+                      "\n"))
+        "\n\n")))))
 
 (defcustom yodel-default-formatter #'yodel--formatter-org
   "Default report formatting function."
