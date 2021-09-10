@@ -63,8 +63,9 @@
 (defvar yodel--process-buffer "*yodel*"
   "Name of the yodel subprocess buffer.")
 
-(defvar yodel-formatters nil
-  "List of yodel report formatting functions.")
+(eval-and-compile
+  (defvar yodel-formatters nil
+    "List of yodel report formatting functions."))
 
 (defvar-local yodel--report nil
   "Report data structure.
@@ -126,71 +127,71 @@ The following anaphoric bindings are available during BODY:
             (buffer-string))))
       yodel-formatters)))
 
-(yodel-formatter raw
-  "Format report as a raw, readable plist."
-  (insert (let (print-level print-length)
-            (pp-to-string report))))
+(eval-and-compile
+  (yodel-formatter raw
+    "Format report as a raw, readable plist."
+    (insert (let (print-level print-length)
+              (pp-to-string report)))))
 
-(yodel-formatter org
-  "Format REPORT in Org syntax."
-  (when (fboundp 'org-mode) (org-mode))
-  (insert
-   (string-join
-    `(,(format "* YODEL REPORT [%s]" (format-time-string "%Y-%m-%d %H:%M"))
-      ,(concat
-        "#+begin_src emacs-lisp :lexical t\n"
-        (yodel--pretty-print (plist-get report :yodel-form))
-        "\n#+end_src")
-      ,@(when stdout
-          (list "** STDOUT:"
-                (concat "#+begin_src emacs-lisp :lexical t\n"
-                        (string-trim stdout)
-                        "\n#+end_src")))
-      ,@(when stderr
-          (list "** STDERR:"
-                (concat "#+begin_src emacs-lisp :lexical t\n"
-                        stderr
-                        "\n#+end_src")))
-      "** Environment"
-      ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
-                  (list (cons "=emacs version=" (emacs-version))
-                        (cons "=system type=" system-type))
-                  "\n"))
-    "\n\n")))
+(eval-and-compile
+  (yodel-formatter org
+    "Format REPORT in Org syntax."
+    (when (fboundp 'org-mode) (org-mode))
+    (insert
+     (string-join
+      `(,(format "* YODEL REPORT [%s]" (format-time-string "%Y-%m-%d %H:%M"))
+        ,(concat
+          "#+begin_src emacs-lisp :lexical t\n"
+          (yodel--pretty-print (plist-get report :yodel-form))
+          "\n#+end_src")
+        ,@(when stdout
+            (list "** STDOUT:"
+                  (concat "#+begin_src emacs-lisp :lexical t\n"
+                          (string-trim stdout)
+                          "\n#+end_src")))
+        ,@(when stderr
+            (list "** STDERR:"
+                  (concat "#+begin_src emacs-lisp :lexical t\n"
+                          stderr
+                          "\n#+end_src")))
+        "** Environment"
+        ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
+                    (list (cons "=emacs version=" (emacs-version))
+                          (cons "=system type=" system-type))
+                    "\n"))
+      "\n\n"))))
 
-(yodel-formatter reddit-markdown
-  "Format REPORT in reddit flavored markdown."
-  (when (fboundp 'markdown-mode) (markdown-mode))
-  (insert
-   (string-join
-    `(,(format "# [YODEL](https://github.com/progfolio/yodel) REPORT (%s):" (format-time-string "%Y-%m-%d %H:%M:%S"))
-      ,(concat
-        "\n"
-        ;;use four spaces because old reddit doesn't render code fences
-        (mapconcat (lambda (s) (format "    %s" s))
-                   (split-string (yodel--pretty-print (plist-get report :yodel-form)) "\n")
-                   "\n")
-        "\n")
-      ,@(when stdout
-          (list "## STDOUT:"
-                (concat "\n    "
-                        (string-trim stdout)
-                        "\n")))
-      ,@(when stderr
-          (list "## STDERR:"
-                (concat "\n    "
-                        stderr
-                        "\n")))
-      "## Environment"
-      ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
-                  (list (cons "**emacs version**" (emacs-version))
-                        (cons "**system type**" system-type))
-                  "\n"))
-    "\n\n")))
+(eval-and-compile
+  (yodel-formatter reddit-markdown
+    "Format REPORT in reddit flavored markdown."
+    (when (fboundp 'markdown-mode) (markdown-mode))
+    (insert
+     (string-join
+      `(,(format "# [YODEL](https://github.com/progfolio/yodel) REPORT (%s):" (format-time-string "%Y-%m-%d %H:%M:%S"))
+        ,(concat
+          "\n"
+          ;;use four spaces because old reddit doesn't render code fences
+          (mapconcat (lambda (s) (format "    %s" s))
+                     (split-string (yodel--pretty-print (plist-get report :yodel-form)) "\n")
+                     "\n")
+          "\n")
+        ,@(when stdout
+            (list "## STDOUT:"
+                  (concat "\n    "
+                          (string-trim stdout)
+                          "\n")))
+        ,@(when stderr
+            (list "## STDERR:"
+                  (concat "\n    "
+                          stderr
+                          "\n")))
+        "## Environment"
+        ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
+                    (list (cons "**emacs version**" (emacs-version))
+                          (cons "**system type**" system-type))
+                    "\n"))
+      "\n\n"))))
 
-(declare-function yodel--formatter-org "yodel")
-(declare-function yodel--formatter-raw "yodel")
-(declare-function yodel--formatter-reddit-markdown "yodel")
 (defcustom yodel-default-formatter #'yodel--formatter-org
   "Default report formatting function."
   :type 'function)
