@@ -192,11 +192,9 @@ The following anaphoric bindings are available during BODY:
   :type 'function)
 
 ;; A variadic plist is a strict subset of a plist.
-;; Its keys must be keywords, its values may not be keywords.
-;; Empty keys are ignored.
+;; Its keys must be keywords, its values may not be keywords. Empty keys are ignored.
 ;; If a key is declared multiple times, it's last declaration is returned.
-;; If a keyword ends with "*" all values until the next keyword
-;; are associated with it in a list.
+;; Keywords suffixed with "*" pack all values until the next keyword in a list.
 (defun yodel-plist*-to-plist (plist*)
   "Convert PLIST* to plist."
   (let (plist variadic keyword last)
@@ -355,11 +353,6 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
              ,d (yodel-plist*-to-plist ,d))
        (eval `(yodel--run ',,d) t))))
 
-;; @IDEA: we could bind library functions here with their definitions, so that
-;; the subprocess doesn't even need to have yodel loaded...
-;; That would allow us to make a formatter (maybe replace "raw"?) which
-;; users eval without having yodel installed...
-;; Instead of prepending (yodel program...) we could sub for (progn program...).
 (defun yodel--run (declaration)
   "Run DECLARATION."
   (cl-destructuring-bind
