@@ -357,7 +357,7 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
     `(let ((,d ',declaration))
        (setq ,d (append ,d (list :yodel-form (yodel--pretty-print (append '(yodel) ,d))))
              ,d (yodel-plist*-to-plist ,d))
-       (yodel--run ,d))))
+       (eval `(yodel--run ',,d) t))))
 
 ;; @IDEA: we could bind library functions here with their definitions, so that
 ;; the subprocess doesn't even need to have yodel loaded...
