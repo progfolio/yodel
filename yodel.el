@@ -273,20 +273,24 @@ Otherwise it is deleted after `yodel-file' finishes running.
 If this is non-nil, allow overwriting PATH.
 Otherwise throw an error if PATH exists."
   (declare (indent defun))
-  (let ((file   (make-symbol "file"))
-        (return (make-symbol "return"))
-        (buffer (make-symbol "buffer"))
-        (a      (make-symbol "args"))
+  (let ((file     (make-symbol "file"))
+        (return   (make-symbol "return"))
+        (buffer   (make-symbol "buffer"))
+        (a        (make-symbol "args"))
         (contents (make-symbol "contents"))
-        (point (make-symbol "point"))
-        (then* (make-symbol "then*"))
-        (p      (make-symbol "path")))
-    `(let* ((,p ,path)
-            (,a   (yodel-plist*-to-plist (if (or (stringp ,p) (null ,p)) ,args `(,,p ',args))))
-            (,point  (plist-get ,a :point))
-            (,then*  (plist-get ,a :then*))
-            (,file (expand-file-name (or ,p (make-temp-name "yodel-"))
-                                     (temporary-file-directory)))
+        (point    (make-symbol "point"))
+        (then*    (make-symbol "then*"))
+        (p        (make-symbol "path")))
+    `(let* ((,p     ,path)
+            (,a     (yodel-plist*-to-plist (if (or (stringp ,p) (null ,p))
+                                               ',args
+                                             (prog1
+                                                 (append (list ,p) ',args)
+                                               (setq ,p nil)))))
+            (,point (plist-get ,a :point))
+            (,then* (plist-get ,a :then*))
+            (,file  (expand-file-name (or ,p (make-temp-name "yodel-"))
+                                      (temporary-file-directory)))
             ,return)
        (unless (plist-get ,a :overwrite)
          (when (file-exists-p ,file)
@@ -299,14 +303,15 @@ Otherwise throw an error if PATH exists."
              (yodel--position-point (or ,point "|")))
            ;;Avoiding write-file because it will add a final newline
            (write-region (point-min) (point-max) ,file)
-           (when ,then* (setq ,return (progn ,@then*))))
-         (unless (plist-get ,a :save)
-           (when (buffer-name ,buffer)
-             (with-current-buffer ,buffer
-               (set-buffer-modified-p nil)
-               (kill-buffer ,buffer)))
-           (delete-file ,file)))
-       ,return)))
+           ;;eval the then* program...
+           (when ,then* (setq ,return (eval `(progn ,@,then*) t)))
+           (unless (plist-get ,a :save)
+             (when (buffer-name ,buffer)
+               (with-current-buffer ,buffer
+                 (set-buffer-modified-p nil)
+                 (kill-buffer ,buffer)))
+             (delete-file ,file)))
+         ,return))))
 
 ;;;###autoload
 (defmacro yodel (&rest declaration)
