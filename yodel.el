@@ -197,10 +197,6 @@ The following anaphoric bindings are available during BODY:
 ;; If a key is declared multiple times, it's last declaration is returned.
 ;; If a keyword ends with "*" all values until the next keyword
 ;; are associated with it in a list.
-(defun yodel--variadic-keyword-p (object)
-  "Return t if OBJECT is a keyword ending in '*'."
-  (and (keywordp object) (string-suffix-p "*" (symbol-name object))))
-
 (defun yodel-plist*-to-plist (plist*)
   "Convert PLIST* to plist."
   (let (plist variadic keyword last)
