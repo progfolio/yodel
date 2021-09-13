@@ -167,7 +167,8 @@ The following anaphoric bindings are available during BODY:
     (when (fboundp 'markdown-mode) (markdown-mode))
     (cl-flet ((indent (s) (with-temp-buffer
                             (insert s)
-                            (let ((fill-prefix "    "))
+                            (let ((fill-prefix "    ")
+                                  (inhibit-message t))
                               (indent-region (point-min) (point-max)))
                             (buffer-string))))
       (insert
