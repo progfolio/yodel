@@ -142,7 +142,7 @@ The following anaphoric bindings are available during BODY:
       `(,(format "* YODEL REPORT [%s]" (format-time-string "%Y-%m-%d %H:%M"))
         ,(concat
           "#+begin_src emacs-lisp :lexical t\n"
-          (yodel--pretty-print (plist-get report :yodel-form))
+          (plist-get report :yodel-form)
           "\n#+end_src")
         ,@(when stdout
             (list "** STDOUT:"
@@ -177,7 +177,7 @@ The following anaphoric bindings are available during BODY:
           ,(concat
             "\n"
             ;;use four spaces because old reddit doesn't render code fences
-            (indent (yodel--pretty-print (plist-get report :yodel-form)))
+            (indent (plist-get report :yodel-form))
             "\n")
           ,@(when stdout (list "## STDOUT:" (concat "\n" (indent stdout) "\n")))
           ,@(when stderr (list "## STDERR:" (concat "\n" (indent stderr) "\n")))
