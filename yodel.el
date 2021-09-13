@@ -242,6 +242,7 @@ The following anaphoric bindings are available during BODY:
 (defmacro yodel-file (path &rest args)
   "Create file at PATH and manipulate it according to ARGS.
 If PATH is nil, a temporary file is created via `make-temp-file'.
+Otherwise it is expanded relative to `default-directory'.
 ARGS must be a plist* with any of the following keys:
 
 :point
@@ -289,7 +290,8 @@ Otherwise throw an error if PATH exists."
             (,point (plist-get ,a :point))
             (,then* (plist-get ,a :then*))
             (,file  (expand-file-name (or ,p (make-temp-name "yodel-"))
-                                      (temporary-file-directory)))
+                                      (if ,p default-directory
+                                        (temporary-file-directory))))
             ,return)
        (unless (plist-get ,a :overwrite)
          (when (file-exists-p ,file)
