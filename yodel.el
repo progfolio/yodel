@@ -347,78 +347,82 @@ DECLARATION may be any of the following keywords and their respective values:
 
 DECLARATION is accessible within the :post* phase via the locally bound plist, yodel-args."
   (declare (indent defun))
-  (let ((d (make-symbol "declaration")))
-    `(let ((,d ',declaration))
-       (setq ,d (append ,d (list :yodel-form (yodel--pretty-print (append '(yodel) ,d))))
-             ,d (yodel-plist*-to-plist ,d))
-       (eval `(yodel--run ',,d) t))))
+  (let* ((declaration (yodel-plist*-to-plist
+                       (append declaration
+                               (list :yodel-form
+                                     (yodel--pretty-print (append '(yodel) declaration))))))
+         (pre* (plist-get declaration :pre*)))
+    `(let ((yodel-args ',declaration))
+       (cl-destructuring-bind
+           ( &key clargs formatter interactive pre* post* raw save user-dir
+             ((:executable emacs) (concat invocation-directory invocation-name))
+             &allow-other-keys
+             &aux
+             (clargs (append (unless interactive '("--batch")) (or clargs yodel--default-args)))
+             (formatter (or formatter yodel-default-formatter #'yodel--formatter-raw))
+             (emacs.d (expand-file-name
+                       (or user-dir (make-temp-file "yodel-" 'directory))
+                       temporary-file-directory))
+             (program     (let ((print-level  nil)
+                                (print-length nil)
+                                (print-circle nil))
+                            ;;@IDEA: modify args to ensure we've included default values?
+                            ;;or store these in their own :yodel sub-plist?
+                            (setq yodel-args (plist-put yodel-args :user-dir emacs.d)
+                                  yodel-args (plist-put yodel-args :executable emacs))
+                            (pp-to-string
+                             ;; The top-level `let' is an intentional local
+                             ;; variable binding. We want users of
+                             ;; `yodel' to have access to their
+                             ;; args within :pre*/:post* programs. Since
+                             ;; we are binding with the package namespace, this
+                             ;; should not overwrite other user bindings.
+                             `(with-demoted-errors "%S"
+                                (require 'yodel)
+                                ;;@TODO: Rename this to be consistent during runtime
+                                ;; and accessing during the report.
+                                ;; we need to clean up the terminology in general...
+                                (let ((yodel-args ',yodel-args))
+                                  (setq user-emacs-directory ,emacs.d
+                                        default-directory    ,emacs.d
+                                        server-name          ,emacs.d
+                                        package-user-dir     (expand-file-name "elpa" ,emacs.d))
+                                  ;;@TODO: this needs to be earlier
+                                  ;; Do we need to create the user dir prior to running this?:
+                                  ;;(plist-get keywords :pre*)
+                                  (unwind-protect (progn ,@post*)
+                                    (message "%s" yodel--process-end-text)
+                                    (message "%S" yodel-args))))))))
+           yodel-args
+         (unless (file-exists-p emacs.d)
+           (make-directory emacs.d 'parents))
+         (let ((default-directory emacs.d))
+           (progn ,@pre*))
+         ;; Reset process buffer.
+         (with-current-buffer (get-buffer-create yodel--process-buffer)
+           (fundamental-mode)
+           (erase-buffer))
+         (make-process
+          :name    yodel--process-buffer
+          :buffer  yodel--process-buffer
+          :command `(,emacs ,@clargs ,program)
+          :sentinel
+          (lambda (process _event)
+            (unless interactive
+              (when (memq (process-status process) '(exit signal))
+                (unless raw
+                  (with-current-buffer yodel--process-buffer
+                    (setq yodel--report (yodel--report))
+                    ;;Necessary to preserve if major mode changes
+                    (put 'yodel--report 'permanent-local t)
+                    (funcall formatter yodel--report)))
+                (run-with-idle-timer 1 nil (lambda () (display-buffer yodel--process-buffer)))
+                (unless save
+                  (when (file-exists-p emacs.d)
+                    (message "in here")
+                    (delete-directory emacs.d 'recursive)))))))
+         (message "Running yodel in directory: %s" emacs.d)))))
 
-(defun yodel--run (declaration)
-  "Run DECLARATION."
-  (cl-destructuring-bind
-      ( &key clargs formatter interactive post* raw save user-dir
-        ((:executable emacs) (concat invocation-directory invocation-name))
-        &allow-other-keys
-        &aux
-        (clargs (append (unless interactive '("--batch")) (or clargs yodel--default-args)))
-        (formatter (or formatter yodel-default-formatter #'yodel--formatter-raw))
-        (emacs.d (expand-file-name
-                  (or user-dir (make-temp-file "yodel-" 'directory))
-                  temporary-file-directory))
-        (program     (let ((print-level  nil)
-                           (print-length nil))
-                       ;;@IDEA: modify args to ensure we've included default values?
-                       ;;or store these in their own :yodel sub-plist?
-                       (setq declaration (plist-put declaration :user-dir emacs.d)
-                             declaration (plist-put declaration :executable emacs))
-                       (pp-to-string
-                        ;; The top-level `let' is an intentional local
-                        ;; variable binding. We want users of
-                        ;; `yodel' to have access to their
-                        ;; args within :pre*/:post* programs. Since
-                        ;; we are binding with the package namespace, this
-                        ;; should not overwrite other user bindings.
-                        `(with-demoted-errors "%S"
-                           (require 'yodel)
-                           ;;@TODO: Rename this to be consistent during runtime
-                           ;; and accessing during the report.
-                           ;; we need to clean up the terminology in general...
-                           (let ((yodel-args ',declaration))
-                             (setq user-emacs-directory ,emacs.d
-                                   default-directory    ,emacs.d
-                                   server-name          ,emacs.d
-                                   package-user-dir     (expand-file-name "elpa" ,emacs.d))
-                             ;;@TODO: this needs to be earlier
-                             ;; Do we need to create the user dir prior to running this?:
-                             ;;(plist-get keywords :pre*)
-                             (unwind-protect (progn ,@post*)
-                               (message "%s" yodel--process-end-text)
-                               (message "%s" yodel-args)))))))
-        (command `(,emacs ,@clargs ,program)))
-      declaration
-    ;; Reset process buffer.
-    (with-current-buffer (get-buffer-create yodel--process-buffer)
-      (fundamental-mode)
-      (erase-buffer))
-    (make-process
-     :name    yodel--process-buffer
-     :buffer  yodel--process-buffer
-     :command command
-     :sentinel
-     (lambda (process _event)
-       (unless interactive
-         (when (memq (process-status process) '(exit signal))
-           (unless raw
-             (with-current-buffer yodel--process-buffer
-               (setq yodel--report (yodel--report))
-               ;;Necessary to preserve if major mode changes
-               (put 'yodel--report 'permanent-local t)
-               (funcall formatter yodel--report)))
-           (run-with-idle-timer 1 nil (lambda () (display-buffer yodel--process-buffer)))
-           (unless save
-             (when (file-exists-p emacs.d)
-               (delete-directory emacs.d 'recursive)))))))
-    (message "Running yodel in directory: %s" emacs.d)))
 
 (defun yodel-reformat (formatter)
   "Reformat report with FORMATTER function."
