@@ -321,7 +321,7 @@ Otherwise throw an error if PATH exists."
          (with-current-buffer ,buffer
            (when-let ((,with* (plist-get ,a :with*)))
              (insert (mapconcat (lambda (el) (if (stringp el) el (prin1-to-string el)))
-                      ,with* "\n")))
+                                ,with* "\n")))
            (unless (and ,point (null ,point))
              (yodel--position-point (or ,point "|")))
            ;;Avoiding write-file because it will add a final newline
