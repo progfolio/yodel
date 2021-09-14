@@ -251,9 +251,9 @@ A regexp representing the initial point position in file's buffer.
 It defaults to \"|\".
 An explicitly nil value will prevent the point from being searched for.
 
-:contents
+:with*
 
-A string which is inserted into the file's buffer.
+Contents which is converted into a string and inserted into file's buffer.
 The first :point indicator is replaced and point is positioned there.
 If no :point indicator is found, point is positioned at `point-min'.
 
@@ -277,7 +277,7 @@ Otherwise throw an error if PATH exists."
         (return   (make-symbol "return"))
         (buffer   (make-symbol "buffer"))
         (a        (make-symbol "args"))
-        (contents (make-symbol "contents"))
+        (with*    (make-symbol "with*"))
         (point    (make-symbol "point"))
         (then*    (make-symbol "then*"))
         (p        (make-symbol "path")))
@@ -298,8 +298,9 @@ Otherwise throw an error if PATH exists."
            (user-error "Cannot overwrite existing file: %S" ,file)))
        (let ((,buffer (find-file-noselect ,file)))
          (with-current-buffer ,buffer
-           (when-let ((,contents (plist-get ,a :contents)))
-             (insert ,contents))
+           (when-let ((,with* (plist-get ,a :with*)))
+             (insert (mapconcat (lambda (el) (if (stringp el) el (prin1-to-string el)))
+                      ,with* "\n")))
            (unless (and ,point (null ,point))
              (yodel--position-point (or ,point "|")))
            ;;Avoiding write-file because it will add a final newline
