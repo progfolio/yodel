@@ -422,7 +422,6 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
                 (run-with-idle-timer 1 nil (lambda () (display-buffer yodel--process-buffer)))
                 (unless save
                   (when (file-exists-p emacs.d)
-                    (message "in here")
                     (delete-directory emacs.d 'recursive)))))))
          (message "Running yodel in directory: %s" emacs.d)))))
 
