@@ -79,7 +79,9 @@ Used for reformatting the report.")
          (string (mapconcat
                   (lambda (el)
                     (concat (when (and el (listp el)) "\n")
-                            (pp-to-string el)
+                            (prin1-to-string el)
+                            ;;@TODO: Make it recursively print forms.
+                            ;;(yodel--pretty-print el)
                             (unless (keywordp el) "\n")))
                   form " ")))
     (with-temp-buffer
