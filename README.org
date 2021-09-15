@@ -34,7 +34,7 @@ For example, evaluating the following:
   :post*
   (yodel-file
     :point "|"
-    :contents "test: |fail"
+    :with* "test: |fail"
     :then*
     (kill-word 1)
     (insert "pass")
@@ -51,7 +51,7 @@ results in the following report when using the org report formatter:
   :post*
   (yodel-file
     :point "|"
-    :contents "test: |fail"
+    :with* "test: |fail"
     :then*
     (kill-word 1)
     (insert "pass")
