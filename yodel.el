@@ -327,7 +327,6 @@ Otherwise throw an error if PATH exists."
              (yodel--position-point (or ,point "|")))
            ;;Avoiding write-file because it will add a final newline
            (write-region (point-min) (point-max) ,file)
-           ;;eval the then* program...
            (when ,then* (setq ,return (eval `(progn ,@,then*) t)))
            (unless (plist-get ,a :save)
              (when (buffer-name ,buffer)
