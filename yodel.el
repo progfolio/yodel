@@ -71,55 +71,33 @@
   "Report data structure.
 Used for reformatting the report.")
 
-(defun yodel--pretty-print-reformat ()
-  "Reformat some code."
-  (save-match-data
-    (let ((match (match-string 1)))
-      (save-excursion
-        (backward-sexp)
-        (save-restriction
-          (narrow-to-region
-           (progn (backward-char) (insert "\n") (point))
-           (progn (forward-sexp) (point)))
-          (goto-char (point-min))
-          (forward-char)
-          (forward-sexp)
-          (forward-sexp)
-          (when (member match '("defun" "defmacro" "lambda" "cl-defmacro" "cl-defun"))
-            (forward-sexp))
-          (let ((p (point)))
-            (forward-char)
-            (while (not (equal (point) p))
-              (insert "\n")
-              (setq p (point))
-              (ignore-errors (forward-sexp)))))))))
-
-(defun yodel--pretty-print (form)
-  "Convert elisp FORM into formatted string."
-  (let* ((print-level nil)
-         (print-length nil)
-         (print-quoted t))
-    (with-temp-buffer
-      (insert (prin1-to-string form))
-      (goto-char (point-min))
-      (mapc (lambda (target)
-              (save-excursion
-                (while (re-search-forward (car target) nil 'no-error)
-                  (funcall (cdr target)))))
-            '(("\\(?:(\\(\\(?:def\\(?:macro\\|un\\)\\|l\\(?:ambda\\|et\\)\\)\\)\\)"
-               ;;let forms
-               . yodel--pretty-print-reformat)
-              ("\\(?:\n[[:space:]]*)\\)" ;;dangling parens
-               . (lambda () (replace-match ")")))
-              ("\\(?:\\(:[^z-a]+?\\) \\)" ;; keywords
-               . (lambda () (replace-match "\n\\1\n")))))
-      ;; Remove empty lines.
-      (goto-char (point-min))
-      (flush-lines "\\(?:^[[:space:]]*$\\)")
-      (emacs-lisp-mode)
-      (let ((inhibit-message t))
-        (indent-region (point-min) (point-max)))
-      (buffer-substring-no-properties (point-min) (point-max)))))
+;;@TODO: reimplement. We're doing too much here.
+;; (defun yodel--pretty-print (form)
+;;   "Convert elisp FORM into formatted string."
+;;   (let* ((print-level nil)
+;;          (print-length nil)
+;;          (print-quoted t))
+;;     (with-temp-buffer
+;;       (insert (prin1-to-string form))
+;;       (goto-char (point-min))
+;;       (mapc (lambda (target)
+;;               (save-excursion
+;;                 (while (re-search-forward (car target) nil 'no-error)
+;;                   (funcall (cdr target)))))
+;;             '(("\\(?:(\\(\\(?:def\\(?:macro\\|un\\)\\|l\\(?:ambda\\|et\\)\\)\\)\\)"
+;;                ;;let forms
+;;                . yodel--pretty-print-reformat)
+;;               ("\\(?:\n[[:space:]]*)\\)" ;;dangling parens
+;;                . (lambda () (replace-match ")")))
+;;               ("\\(?:\\(:[^z-a]+?\\) \\)" ;; keywords
+;;                . (lambda () (replace-match "\n\\1\n")))))
+;;       ;; Remove empty lines.
+;;       (goto-char (point-min))
+;;       (flush-lines "\\(?:^[[:space:]]*$\\)")
+;;       (emacs-lisp-mode)
+;;       (let ((inhibit-message t))
+;;         (indent-region (point-min) (point-max)))
+;;       (buffer-substring-no-properties (point-min) (point-max)))))
 
 (defmacro yodel-formatter (name description &rest body)
   "Create a yodel formatting function with BODY and NAME.
@@ -375,7 +353,7 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
   (let* ((declaration (yodel-plist*-to-plist
                        (append declaration
                                (list :yodel-form
-                                     (yodel--pretty-print (append '(yodel) declaration))))))
+                                     (pp-to-string (append '(yodel) declaration))))))
          (pre* (plist-get declaration :pre*)))
     `(eval
       '(let ((yodel-args ',declaration))
