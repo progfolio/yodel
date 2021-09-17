@@ -112,7 +112,7 @@ The following anaphoric bindings are available during BODY:
 - stderr: The errors output by the subprocess.
 - report: The report form."
   (declare (indent defun))
-  (let ((fn (intern (format "yodel--formatter-%s" name))))
+  (let ((fn (intern (format "yodel-format-as-%s" name))))
     (when (fboundp fn) (makunbound fn))
     `(cl-pushnew
       (defun ,fn (report)
@@ -182,7 +182,7 @@ The following anaphoric bindings are available during BODY:
                       "\n"))
         "\n\n")))))
 
-(defcustom yodel-default-formatter #'yodel--formatter-org
+(defcustom yodel-default-formatter #'yodel-format-as-org
   "Default report formatting function."
   :type 'function)
 
@@ -385,7 +385,7 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
              &allow-other-keys
              &aux
              (clargs (append (unless interactive '("--batch")) (or clargs yodel--default-args)))
-             (formatter (or formatter yodel-default-formatter #'yodel--formatter-raw))
+             (formatter (or formatter yodel-default-formatter #'yodel-format-as-raw))
              (emacs.d (expand-file-name
                        (or user-dir (make-temp-file "yodel-" 'directory))
                        temporary-file-directory))
@@ -444,7 +444,7 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
                          (lambda (fn) (cons
                                        (format "%s -> %s"
                                                (replace-regexp-in-string
-                                                "yodel--formatter-" ""
+                                                "yodel-format-as-" ""
                                                 (symbol-name fn))
                                                (car (split-string (documentation fn) "\n")))
                                        fn))
