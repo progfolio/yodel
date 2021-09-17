@@ -140,7 +140,9 @@ The following anaphoric bindings are available during BODY:
           (src-end "\n#+end_src"))
       (insert
        (string-join
-        `(,(format "* YODEL REPORT [%s]" (format-time-string "%Y-%m-%d %H:%M"))
+        `(,(format "* YODEL REPORT [%s]"
+                   (format-time-string "%Y-%m-%d %H:%M:%S"
+                                       (seconds-to-time (plist-get report :yodel-time))))
           ,(concat src-start (plist-get report :yodel-form) src-end)
           ,@(when stdout (list "** STDOUT:" (concat src-start (string-trim stdout) src-end)))
           ,@(when stderr (list "** STDERR:" (concat src-start stderr src-end)))
@@ -163,7 +165,9 @@ The following anaphoric bindings are available during BODY:
                             (buffer-string))))
       (insert
        (string-join
-        `(,(format "# [YODEL](https://github.com/progfolio/yodel) REPORT (%s):" (format-time-string "%Y-%m-%d %H:%M:%S"))
+        `(,(format "# [YODEL](https://github.com/progfolio/yodel) REPORT (%s):"
+                   (format-time-string "%Y-%m-%d %H:%M:%S"
+                                       (seconds-to-time (plist-get report :yodel-time))))
           ,(concat
             "\n"
             ;;use four spaces because old reddit doesn't render code fences
@@ -407,6 +411,8 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
                                         server-name          ,emacs.d
                                         package-user-dir     (expand-file-name "elpa" ,emacs.d))
                                   (unwind-protect (progn ,@post*)
+                                    (plist-put yodel-args :yodel-time
+                                               (string-to-number (format-time-string "%s")))
                                     (message "%s" ,yodel--process-end-text)
                                     (message "%S" yodel-args))))))))
            yodel-args
