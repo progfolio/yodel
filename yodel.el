@@ -136,29 +136,20 @@ The following anaphoric bindings are available during BODY:
   (yodel-formatter org
     "Format REPORT in Org syntax."
     (when (fboundp 'org-mode) (org-mode))
-    (insert
-     (string-join
-      `(,(format "* YODEL REPORT [%s]" (format-time-string "%Y-%m-%d %H:%M"))
-        ,(concat
-          "#+begin_src emacs-lisp :lexical t\n"
-          (plist-get report :yodel-form)
-          "\n#+end_src")
-        ,@(when stdout
-            (list "** STDOUT:"
-                  (concat "#+begin_src emacs-lisp :lexical t\n"
-                          (string-trim stdout)
-                          "\n#+end_src")))
-        ,@(when stderr
-            (list "** STDERR:"
-                  (concat "#+begin_src emacs-lisp :lexical t\n"
-                          stderr
-                          "\n#+end_src")))
-        "** Environment"
-        ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
-                    (list (cons "=emacs version=" (emacs-version))
-                          (cons "=system type=" system-type))
-                    "\n"))
-      "\n\n"))))
+    (let ((src-start "#+begin_src emacs-lisp :lexical t :results silent\n")
+          (src-end "\n#+end_src"))
+      (insert
+       (string-join
+        `(,(format "* YODEL REPORT [%s]" (format-time-string "%Y-%m-%d %H:%M"))
+          ,(concat src-start (plist-get report :yodel-form) src-end)
+          ,@(when stdout (list "** STDOUT:" (concat src-start (string-trim stdout) src-end)))
+          ,@(when stderr (list "** STDERR:" (concat src-start stderr src-end)))
+          "** Environment"
+          ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
+                      (list (cons "=emacs version=" (emacs-version))
+                            (cons "=system type=" system-type))
+                      "\n"))
+        "\n\n")))))
 
 (eval-and-compile
   (yodel-formatter reddit-markdown
