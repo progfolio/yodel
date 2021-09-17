@@ -212,6 +212,7 @@ The following anaphoric bindings are available during BODY:
       (replace-match "")
     (goto-char (point-min))))
 
+;;@TODO: Needs to be more robust when we encounter a read error.
 (defun yodel--report ()
   "Read the report from `yodel--process-buffer'."
   (if (get-buffer yodel--process-buffer)
