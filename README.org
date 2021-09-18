@@ -73,6 +73,11 @@ test: pass
 #+end_src
 
 Reformatting reports is as easy as =M-x yodel-reformat=.
+Yodel offers out-of-the-box formatters for:
+
+- Github
+- Reddit
+- Org
 
 ** NOTICE
 Yodel is still in early development.
