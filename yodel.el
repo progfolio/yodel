@@ -354,14 +354,13 @@ Otherwise throw an error if PATH exists."
                                 ,with* "\n")))
            (when ,point (yodel--position-point ,point))
            ;;Avoiding write-file because it will add a final newline
-           (write-region (point-min) (point-max) ,file)
-           (when ,then* (setq ,return (eval `(progn ,@,then*) t)))
-           (unless (plist-get ,a :save)
-             (when (buffer-name ,buffer)
-               (with-current-buffer ,buffer
-                 (set-buffer-modified-p nil)
-                 (kill-buffer ,buffer)))
-             (delete-file ,file)))
+           (with-file-modes #o0666
+             (write-region (point-min) (point-max) ,file))
+           (when ,then* (setq ,return (eval `(progn ,@,then*) t))))
+         (with-current-buffer ,buffer ;;rebound in case :then* chagned it
+           (set-buffer-modified-p nil)
+           (kill-buffer ,buffer)
+           (unless (plist-get ,a :save) (delete-file ,file)))
          ,return))))
 
 ;;;###autoload
