@@ -430,7 +430,7 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
                              ;; we are binding with the package namespace, this
                              ;; should not overwrite other user bindings.
                              `(with-demoted-errors "%S"
-                                ;;(require 'yodel)
+                                (require 'yodel)
                                 (let ((yodel-args ',yodel-args))
                                   (setq user-emacs-directory ,emacs.d
                                         default-directory    ,emacs.d
