@@ -345,7 +345,7 @@ Otherwise throw an error if PATH exists."
        ;;create the dir if necessary
        ;;@TODO: keep track of what we're creating so that we can properly clean up
        (let ((dir (file-name-directory ,file)))
-         (unless (file-exists-p dir) (make-directory dir)))
+         (unless (file-exists-p dir) (make-directory dir t)))
        (let ((,buffer (find-file-noselect ,file)))
          (with-current-buffer ,buffer
            (when-let ((,with* (plist-get ,a :with*)))
