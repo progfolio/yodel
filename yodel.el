@@ -295,7 +295,6 @@ ARGS must be a plist* with any of the following keys:
 :point
 
 A regexp representing the initial point position in file's buffer.
-It defaults to \"|\".
 An explicitly nil value will prevent the point from being searched for.
 
 :with*
@@ -348,8 +347,7 @@ Otherwise throw an error if PATH exists."
            (when-let ((,with* (plist-get ,a :with*)))
              (insert (mapconcat (lambda (el) (if (stringp el) el (prin1-to-string el)))
                                 ,with* "\n")))
-           (unless (and ,point (null ,point))
-             (yodel--position-point (or ,point "|")))
+           (when ,point (yodel--position-point ,point))
            ;;Avoiding write-file because it will add a final newline
            (write-region (point-min) (point-max) ,file)
            (when ,then* (setq ,return (eval `(progn ,@,then*) t)))
