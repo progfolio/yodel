@@ -79,6 +79,17 @@ Yodel offers out-of-the-box formatters for:
 - Reddit
 - Org
 
+** Yodel-ay-hee-how?
+Yodel is currently only available via this repository.
+*** Install with [[https://github.com/raxod502/straight.el][straight.el]]
+#+begin_src emacs-lisp :lexical t
+(straight-use-package '(yodel :host github :repo "progfolio/yodel"))
+#+end_src
+(side note: The inspiration for yodel is straight.el's =straight-bug-report=)
+*** Install manually
+- Clone this repository
+- Add it to your load-path
+- =(require 'yodel)=
 ** NOTICE
 Yodel is still in early development.
 API is experimental at this time.
