@@ -41,36 +41,42 @@ For example, evaluating the following:
     (message "%s" (buffer-string))))
 #+end_src
 
-results in the following report when using the org report formatter:
+results in the following report when using the github formatter:
 
-#+begin_src org
-,* YODEL REPORT [2021-09-08 17:51]
 
-,#+begin_src emacs-lisp :lexical t
-(yodel
-  :post*
-  (yodel-file
-    :point "|"
-    :with* "test: |fail"
-    :then*
+[YODEL](https://github.com/progfolio/yodel) REPORT (2021-09-17 23:16:24):
+
+
+```emacs-lisp
+(yodel :post*
+  (yodel-file :point "|" :with* "test: |fail" :then*
     (kill-word 1)
     (insert "pass")
     (message "%s"
              (buffer-string))))
-,#+end_src
 
-,** STDOUT:
+```
 
-,#+begin_src emacs-lisp :lexical t
-test: pass
-,#+end_src
+<details>
+  <summary>STDERR:</summary>
 
-,** Environment
 
-- =emacs version=: GNU Emacs 28.0.50 (build 1, x86_64-pc-linux-gnu, X toolkit, cairo version 1.17.4, Xaw3d scroll bars)
- of 2021-09-04
-- =system type=: gnu/linux
-#+end_src
+
+```emacs-lisp
+(void-function yodel-file)
+```
+
+
+</details>
+
+<details>
+  <summary>Environment</summary>
+
+- **emacs version**: GNU Emacs 28.0.50 (build 1, x86_64-pc-linux-gnu, X toolkit, cairo version 1.17.4, Xaw3d scroll bars)
+ of 2021-09-16
+- **system type**: gnu/linux
+
+</details>
 
 Reformatting reports is as easy as =M-x yodel-reformat=.
 
