@@ -71,33 +71,34 @@
   "Report data structure.
 Used for reformatting the report.")
 
-;;@TODO: reimplement. We're doing too much here.
-;; (defun yodel--pretty-print (form)
-;;   "Convert elisp FORM into formatted string."
-;;   (let* ((print-level nil)
-;;          (print-length nil)
-;;          (print-quoted t))
-;;     (with-temp-buffer
-;;       (insert (prin1-to-string form))
-;;       (goto-char (point-min))
-;;       (mapc (lambda (target)
-;;               (save-excursion
-;;                 (while (re-search-forward (car target) nil 'no-error)
-;;                   (funcall (cdr target)))))
-;;             '(("\\(?:(\\(\\(?:def\\(?:macro\\|un\\)\\|l\\(?:ambda\\|et\\)\\)\\)\\)"
-;;                ;;let forms
-;;                . yodel--pretty-print-reformat)
-;;               ("\\(?:\n[[:space:]]*)\\)" ;;dangling parens
-;;                . (lambda () (replace-match ")")))
-;;               ("\\(?:\\(:[^z-a]+?\\) \\)" ;; keywords
-;;                . (lambda () (replace-match "\n\\1\n")))))
-;;       ;; Remove empty lines.
-;;       (goto-char (point-min))
-;;       (flush-lines "\\(?:^[[:space:]]*$\\)")
-;;       (emacs-lisp-mode)
-;;       (let ((inhibit-message t))
-;;         (indent-region (point-min) (point-max)))
-;;       (buffer-substring-no-properties (point-min) (point-max)))))
+(defun yodel--pretty-print (form)
+  "Convert elisp FORM into formatted string."
+  (let* ((print-level nil)
+         (print-length nil)
+         (print-quoted t))
+    (with-temp-buffer
+      (insert (pp-to-string form))
+      (goto-char (point-min))
+      (emacs-lisp-mode)
+      (font-lock-mode 1)
+      (font-lock-ensure)
+      (mapc (lambda (target)
+              (save-excursion
+                (while (re-search-forward (car target) nil 'no-error)
+                  (funcall (cdr target)))))
+            '(("\\(?: \\(:[^z-a]*?\\) \\)";; keywords
+               . (lambda ()
+                   (when (eq (get-text-property
+                              (save-excursion (forward-sexp -1) (point)) 'face)
+                             'font-lock-builtin-face)
+                     (replace-match
+                      (concat "\n\\1" (if (string-suffix-p "*" (match-string 1)) "\n" " "))))))))
+      ;; Remove empty lines.
+      (goto-char (point-min))
+      (flush-lines "\\(?:^[[:space:]]*$\\)")
+      (let ((inhibit-message t))
+        (indent-region (point-min) (point-max)))
+      (buffer-substring-no-properties (point-min) (point-max)))))
 
 (defmacro yodel-formatter (name description &rest body)
   "Create a yodel formatting function with BODY and NAME.
@@ -399,7 +400,7 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
   (let* ((declaration (yodel-plist*-to-plist
                        (append declaration
                                (list :yodel-form
-                                     (pp-to-string (append '(yodel) declaration))))))
+                                     (yodel--pretty-print (append '(yodel) declaration))))))
          (pre* (plist-get declaration :pre*)))
     `(let ((yodel-args ',declaration))
        (cl-destructuring-bind
