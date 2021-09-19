@@ -120,11 +120,10 @@ The following anaphoric bindings are available during BODY:
         ,(replace-regexp-in-string "report" #'upcase description)
         (cl-destructuring-bind (&key stdout stderr report) report
           (ignore report stdout stderr) ;no-op here to satisfy byte compiler.
-          (with-current-buffer yodel-process-buffer
-            (erase-buffer)
-            (goto-char (point-min))
-            ,@body
-            (buffer-string))))
+          (erase-buffer)
+          (goto-char (point-min))
+          ,@body
+          (buffer-string)))
       yodel-formatters)))
 
 (eval-and-compile
@@ -242,10 +241,10 @@ The following anaphoric bindings are available during BODY:
     (goto-char (point-min))))
 
 ;;@TODO: Needs to be more robust when we encounter a read error.
-(defun yodel--report ()
-  "Read the report from `yodel-process-buffer'."
-  (if (get-buffer yodel-process-buffer)
-      (with-current-buffer yodel-process-buffer
+(defun yodel--report (buffer)
+  "Read the report from BUFFER."
+  (if (get-buffer buffer)
+      (with-current-buffer buffer
         (goto-char (point-min))
         (list
          :stdout (let ((stdout (buffer-substring
@@ -256,7 +255,7 @@ The following anaphoric bindings are available during BODY:
          :report (and (forward-line) (read (current-buffer)))
          :stderr (let ((stderr (buffer-substring (1+ (point)) (1- (point-max)))))
                    (unless (string-empty-p (string-trim stderr)) stderr))))
-    (error "Yodel process buffer no longer live")))
+    (error "Report process buffer no longer live")))
 
 ;;@HACK:
 ;; Because we can't rely on the report buffer having lexical binding enabled
@@ -271,19 +270,20 @@ The following anaphoric bindings are available during BODY:
 (defun yodel--sentinel (process _event)
   "Pass PROCESS report to formatter."
   (when (memq (process-status process) '(exit signal))
-    (with-current-buffer yodel-process-buffer
-      ;;Bound to prevent buffer-local var wipe if formatter changes major mode.
-      (let ((save yodel--save)
-            (emacs.d yodel--emacs.d))
-        (unless yodel--interactive
-          (unless yodel--raw
-            (setq yodel--report (yodel--report))
-            ;;Necessary to preserve in case formatter changes major mode
-            (put 'yodel--report 'permanent-local t)
-            (funcall yodel--formatter yodel--report)))
-        (display-buffer yodel-process-buffer '(display-buffer-reuse-window))
-        (unless save
-          (when (file-exists-p emacs.d) (delete-directory emacs.d 'recursive)))))))
+    (let ((buffer (process-buffer process)))
+      (with-current-buffer buffer
+        ;;Bound to prevent buffer-local var wipe if formatter changes major mode.
+        (let ((save yodel--save)
+              (emacs.d yodel--emacs.d))
+          (unless yodel--interactive
+            (unless yodel--raw
+              (setq yodel--report (yodel--report buffer))
+              ;;Necessary to preserve in case formatter changes major mode
+              (put 'yodel--report 'permanent-local t)
+              (funcall yodel--formatter yodel--report)))
+          (display-buffer buffer '(display-buffer-reuse-window))
+          (unless save
+            (when (file-exists-p emacs.d) (delete-directory emacs.d 'recursive))))))))
 
 ;;;###autoload
 (defmacro yodel-file (path &rest args)
@@ -464,27 +464,27 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
 
 (defun yodel-reformat (formatter)
   "Reformat report with FORMATTER function."
-  (interactive (list
-                (let* ((candidates
-                        (mapcar
-                         (lambda (fn) (cons
-                                       (format "%s -> %s"
-                                               (replace-regexp-in-string
-                                                "yodel-format-as-" ""
-                                                (symbol-name fn))
-                                               (car (split-string (documentation fn) "\n")))
-                                       fn))
-                         yodel-formatters))
-                       (selection
-                        (completing-read "formatter: "
-                                         (setq candidates
-                                               (cl-sort candidates #'string< :key #'car))
-                                         nil 'require-match)))
-                  (alist-get selection candidates nil nil #'equal))))
-  (funcall formatter (if (get-buffer yodel-process-buffer)
-                         (with-current-buffer yodel-process-buffer
-                           yodel--report)
-                       (user-error "%S buffer not live" yodel-process-buffer))))
+  (interactive (progn
+                 (or yodel--report
+                     (user-error "No report associated with current buffer"))
+                 (list
+                  (let* ((candidates
+                          (mapcar
+                           (lambda (fn) (cons
+                                         (format "%s -> %s"
+                                                 (replace-regexp-in-string
+                                                  "yodel-format-as-" ""
+                                                  (symbol-name fn))
+                                                 (car (split-string (documentation fn) "\n")))
+                                         fn))
+                           yodel-formatters))
+                         (selection
+                          (completing-read "formatter: "
+                                           (setq candidates
+                                                 (cl-sort candidates #'string< :key #'car))
+                                           nil 'require-match)))
+                    (alist-get selection candidates nil nil #'equal)))))
+  (funcall formatter yodel--report))
 
 (provide 'yodel)
 ;;; LocalWords:  subprocess MERCHANTABILITY Vollmer elisp Elisp elpa emacs variadic baz eval plist ARGS args dir src formatter pre namespace metaprogram reddit
