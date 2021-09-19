@@ -422,37 +422,39 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
              (emacs.d (expand-file-name
                        (or user-dir (make-temp-file "yodel-" 'directory))
                        temporary-file-directory))
-             (program     (let ((print-level  nil)
-                                (print-length nil)
-                                (print-circle nil))
-                            ;;@IDEA: modify args to ensure we've included default values?
-                            ;;or store these in their own :yodel sub-plist?
-                            (setq yodel-args (plist-put yodel-args :user-dir emacs.d)
-                                  yodel-args (plist-put yodel-args :executable emacs))
-                            (pp-to-string
-                             ;; The top-level `let' is an intentional local
-                             ;; variable binding. We want users of
-                             ;; `yodel' to have access to their
-                             ;; args within :pre*/:post* programs. Since
-                             ;; we are binding with the package namespace, this
-                             ;; should not overwrite other user bindings.
-                             `(with-demoted-errors "%S"
-                                (require 'yodel)
-                                (let ((yodel-args ',yodel-args))
-                                  (setq user-emacs-directory ,emacs.d
-                                        default-directory    ,emacs.d
-                                        server-name          ,emacs.d
-                                        package-user-dir     (expand-file-name "elpa" ,emacs.d))
-                                  (unwind-protect (progn ,@post*)
-                                    (plist-put yodel-args :yodel-time
-                                               (string-to-number (format-time-string "%s")))
-                                    (message "%s" ,yodel--process-end-text)
-                                    (message "%S" yodel-args))))))))
+             program)
            yodel-args
          (unless (file-exists-p emacs.d)
            (make-directory emacs.d 'parents))
          (let ((default-directory emacs.d))
            (progn ,@pre*))
+         ;; Bind program after :pre* in case yodel-args has been modified.
+         (setq program
+               (let ((print-level  nil)
+                     (print-length nil)
+                     (print-circle nil))
+                 ;; Ensure default values are present even if not specified.
+                 (setq yodel-args (plist-put yodel-args :user-dir emacs.d)
+                       yodel-args (plist-put yodel-args :executable emacs))
+                 (pp-to-string
+                  ;; The top-level `let' is an intentional local
+                  ;; variable binding. We want users of
+                  ;; `yodel' to have access to their
+                  ;; args within :pre*/:post* programs. Since
+                  ;; we are binding with the package namespace, this
+                  ;; should not overwrite other user bindings.
+                  `(with-demoted-errors "%S"
+                     (require 'yodel)
+                     (let ((yodel-args ',yodel-args))
+                       (setq user-emacs-directory ,emacs.d
+                             default-directory    ,emacs.d
+                             server-name          ,emacs.d
+                             package-user-dir     (expand-file-name "elpa" ,emacs.d))
+                       (unwind-protect (progn ,@post*)
+                         (plist-put yodel-args :yodel-time
+                                    (string-to-number (format-time-string "%s")))
+                         (message "%s" ,yodel--process-end-text)
+                         (message "%S" yodel-args)))))))
          ;; Reset process buffer.
          (with-current-buffer (get-buffer-create yodel-process-buffer)
            (fundamental-mode) ; We want this to wipe out buffer local vars here
