@@ -60,7 +60,7 @@
 (defvar yodel--default-args `("-Q" "-L" ,(file-name-directory (locate-library "yodel")) "--eval")
   "Arguments passed to the Emacs executable when testing.")
 
-(defvar yodel--process-buffer "*yodel*"
+(defvar yodel-process-buffer "*yodel*"
   "Name of the yodel subprocess buffer.")
 
 (eval-and-compile
@@ -105,7 +105,7 @@ Used for reformatting the report.")
 Add the function to `yodel-formatters'.
 Each function should accept a report plist as its sole argument.
 DESCRIPTION is used as the docstring, and when prompting via `yodel-reformat'.
-BODY will be executed in the context of an empty `yodel--process-buffer'.
+BODY will be executed in the context of an empty `yodel-process-buffer'.
 `buffer-string' is returned after BODY is executed.
 The following anaphoric bindings are available during BODY:
 
@@ -120,7 +120,7 @@ The following anaphoric bindings are available during BODY:
         ,(replace-regexp-in-string "report" #'upcase description)
         (cl-destructuring-bind (&key stdout stderr report) report
           (ignore report stdout stderr) ;no-op here to satisfy byte compiler.
-          (with-current-buffer yodel--process-buffer
+          (with-current-buffer yodel-process-buffer
             (erase-buffer)
             (goto-char (point-min))
             ,@body
@@ -243,9 +243,9 @@ The following anaphoric bindings are available during BODY:
 
 ;;@TODO: Needs to be more robust when we encounter a read error.
 (defun yodel--report ()
-  "Read the report from `yodel--process-buffer'."
-  (if (get-buffer yodel--process-buffer)
-      (with-current-buffer yodel--process-buffer
+  "Read the report from `yodel-process-buffer'."
+  (if (get-buffer yodel-process-buffer)
+      (with-current-buffer yodel-process-buffer
         (goto-char (point-min))
         (list
          :stdout (let ((stdout (buffer-substring
@@ -271,7 +271,7 @@ The following anaphoric bindings are available during BODY:
 (defun yodel--sentinel (process _event)
   "Pass PROCESS report to formatter."
   (when (memq (process-status process) '(exit signal))
-    (with-current-buffer yodel--process-buffer
+    (with-current-buffer yodel-process-buffer
       ;;Bound to prevent buffer-local var wipe if formatter changes major mode.
       (let ((save yodel--save)
             (emacs.d yodel--emacs.d))
@@ -281,7 +281,7 @@ The following anaphoric bindings are available during BODY:
             ;;Necessary to preserve in case formatter changes major mode
             (put 'yodel--report 'permanent-local t)
             (funcall yodel--formatter yodel--report)))
-        (display-buffer yodel--process-buffer '(display-buffer-reuse-window))
+        (display-buffer yodel-process-buffer '(display-buffer-reuse-window))
         (unless save
           (when (file-exists-p emacs.d) (delete-directory emacs.d 'recursive)))))))
 
@@ -375,7 +375,7 @@ DECLARATION may be any of the following keywords and their respective values:
 
   - :interactive Boolean
       If nil, the subprocess will immediately exit after the test.
-      Output will be printed to `yodel--process-buffer'
+      Output will be printed to `yodel-process-buffer'
       Otherwise, the subprocess will be interactive.
 
   - :save Boolean
@@ -388,7 +388,7 @@ DECLARATION may be any of the following keywords and their respective values:
 
   - :raw Boolean
       If non-nil, the raw process output is sent to
-      `yodel--process-buffer'. Otherwise, it is
+      `yodel-process-buffer'. Otherwise, it is
       passed to the :formatter function.
 
   - :user-dir String
@@ -447,7 +447,7 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
          (let ((default-directory emacs.d))
            (progn ,@pre*))
          ;; Reset process buffer.
-         (with-current-buffer (get-buffer-create yodel--process-buffer)
+         (with-current-buffer (get-buffer-create yodel-process-buffer)
            (fundamental-mode) ; We want this to wipe out buffer local vars here
            (erase-buffer)
            (setq-local yodel--interactive interactive
@@ -456,8 +456,8 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
                        yodel--formatter formatter
                        yodel--emacs.d emacs.d))
          (make-process
-          :name    yodel--process-buffer
-          :buffer  yodel--process-buffer
+          :name    yodel-process-buffer
+          :buffer  yodel-process-buffer
           :command `(,emacs ,@clargs ,program)
           :sentinel #'yodel--sentinel)
          (message "Running yodel in directory: %s" emacs.d)))))
@@ -481,10 +481,10 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
                                                (cl-sort candidates #'string< :key #'car))
                                          nil 'require-match)))
                   (alist-get selection candidates nil nil #'equal))))
-  (funcall formatter (if (get-buffer yodel--process-buffer)
-                         (with-current-buffer yodel--process-buffer
+  (funcall formatter (if (get-buffer yodel-process-buffer)
+                         (with-current-buffer yodel-process-buffer
                            yodel--report)
-                       (user-error "%S buffer not live" yodel--process-buffer))))
+                       (user-error "%S buffer not live" yodel-process-buffer))))
 
 (provide 'yodel)
 ;;; LocalWords:  subprocess MERCHANTABILITY Vollmer elisp Elisp elpa emacs variadic baz eval plist ARGS args dir src formatter pre namespace metaprogram reddit
