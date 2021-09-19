@@ -360,12 +360,12 @@ Otherwise throw an error if PATH exists."
                                                  (prin1-to-string el))))
                                 ,with* "\n")))
            (when ,point (yodel--position-point ,point))
-           ;;Avoiding write-file because it will add a final newline
-           (with-file-modes #o0666
-             (write-region (point-min) (point-max) ,file))
            (when ,then* (setq ,return (eval `(progn ,@,then*) t))))
          (with-current-buffer ,buffer ;;rebound in case :then* chagned it
            (set-buffer-modified-p nil)
+           ;;Avoiding write-file because it will add a final newline
+           (with-file-modes #o0666
+             (write-region (point-min) (point-max) ,file))
            (kill-buffer ,buffer)
            (unless (plist-get ,a :save) (delete-file ,file)))
          ,return))))
