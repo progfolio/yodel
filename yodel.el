@@ -351,7 +351,13 @@ Otherwise throw an error if PATH exists."
          (with-current-buffer ,buffer
            (when-let ((,with* (plist-get ,a :with*)))
              (erase-buffer)
-             (insert (mapconcat (lambda (el) (if (stringp el) el (prin1-to-string el)))
+             (insert (mapconcat (lambda (el) (if (stringp el) el
+                                               ;;@TODO: abstract into macro?
+                                               ;;(yodel--without-print-limits ....)
+                                               (let (print-level
+                                                     print-length
+                                                     print-circle)
+                                                 (prin1-to-string el))))
                                 ,with* "\n")))
            (when ,point (yodel--position-point ,point))
            ;;Avoiding write-file because it will add a final newline
