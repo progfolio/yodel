@@ -216,22 +216,23 @@ The following anaphoric bindings are available during BODY:
 ;; Keywords suffixed with "*" pack all values until the next keyword in a list.
 (defun yodel-plist*-to-plist (plist*)
   "Convert PLIST* to plist."
-  (let (plist variadic keyword last)
-    (unless (keywordp (car plist*))
-      (signal 'wrong-type-argument `(keywordp ,(car plist*))))
-    (dolist (el plist* plist)
-      (if (keywordp el)
-          (setq variadic (string-suffix-p "*" (symbol-name el))
-                keyword el)
-        (setq plist
-              (plist-put
-               plist keyword
-               (if variadic
-                   (append (plist-get plist keyword) (list el))
-                 (unless (keywordp last)
-                   (error "Non-variadic key \"%S\" passed more than one value" keyword))
-                 el))))
-      (setq last el))))
+  (when plist*
+    (let (plist variadic keyword last)
+      (unless (keywordp (car plist*))
+        (signal 'wrong-type-argument `(keywordp ,(car plist*))))
+      (dolist (el plist* plist)
+        (if (keywordp el)
+            (setq variadic (string-suffix-p "*" (symbol-name el))
+                  keyword el)
+          (setq plist
+                (plist-put
+                 plist keyword
+                 (if variadic
+                     (append (plist-get plist keyword) (list el))
+                   (unless (keywordp last)
+                     (error "Non-variadic key \"%S\" passed more than one value" keyword))
+                   el))))
+        (setq last el)))))
 
 (defun yodel--position-point (indicator)
   "Replace point INDICATOR with actual point."
