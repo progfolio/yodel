@@ -187,24 +187,24 @@ The following anaphoric bindings are available during BODY:
     "Format REPORT in github flavored markdown."
     (when (fboundp 'markdown-mode) (markdown-mode))
     (let ((fence-start "\n```emacs-lisp\n")
-          (fence-end "\n```"))
+          (fence-end "\n```\n"))
       (insert
        (string-join
         `(,(format "[YODEL](https://github.com/progfolio/yodel) REPORT (%s):"
                    (format-time-string "%Y-%m-%d %H:%M:%S"
                                        (seconds-to-time (plist-get report :yodel-time))))
           ,(concat fence-start (plist-get report :yodel-form) fence-end)
-          ,@(when stdout (list "<details>\n  <summary>STDOUT:</summary>\n" (concat fence-start stdout fence-end)
-                               "\n</details>"))
-          ,@(when stderr (list "<details>\n  <summary>STDERR:</summary>\n" (concat fence-start stderr fence-end)
-                               "\n</details>"))
-          "<details>\n  <summary>Environment</summary>"
+          ,@(when stdout (list "<details><summary>STDOUT:</summary>" (concat fence-start (string-trim stdout) fence-end)
+                               "</details>"))
+          ,@(when stderr (list "<details><summary>STDERR:</summary>" (concat fence-start stderr fence-end)
+                               "</details>"))
+          "<details><summary>Environment</summary>\n"
           ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
                       (list (cons "**emacs version**" (emacs-version))
                             (cons "**system type**" system-type))
                       "\n")
-          "</details>")
-        "\n\n")))))
+          "\n</details>")
+        "\n")))))
 
 (defcustom yodel-default-formatter #'yodel-format-as-org
   "Default report formatting function."
