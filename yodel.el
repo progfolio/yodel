@@ -446,8 +446,12 @@ DECLARATION may be any of the following keywords and their respective values:
   - :clargs*
       Command line args for the child process.
 
-DECLARATION is accessible within the :post* phase via the locally bound plist, yodel-args."
-  (declare (indent defun))
+  - :packages*
+      Packages which are installed in the test enviornment.
+      Packages are installed via straight.el, which see for recipe format.
+
+DECLARATION is accessible within the :post* phase via the yodel-args plist."
+  (declare (indent 0))
   (let* ((declaration (yodel-plist*-to-plist
                        (append declaration
                                (list :yodel-form
@@ -469,34 +473,123 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
          (unless (file-exists-p emacs.d)
            (make-directory emacs.d 'parents))
          (let ((default-directory emacs.d))
-           (progn ,@pre*))
-         ;; Bind program after :pre* in case yodel-args has been modified.
-         (setq program
-               (let ((print-level  nil)
-                     (print-length nil)
-                     (print-circle nil))
-                 ;; Ensure default values are present even if not specified.
-                 (setq yodel-args (plist-put yodel-args :user-dir emacs.d)
-                       yodel-args (plist-put yodel-args :executable emacs))
-                 (pp-to-string
-                  ;; The top-level `let' is an intentional local
-                  ;; variable binding. We want users of
-                  ;; `yodel' to have access to their
-                  ;; args within :pre*/:post* programs. Since
-                  ;; we are binding with the package namespace, this
-                  ;; should not overwrite other user bindings.
-                  `(with-demoted-errors "%S"
-                     (require 'yodel)
-                     (let ((yodel-args ',yodel-args))
-                       (setq user-emacs-directory ,emacs.d
-                             default-directory    ,emacs.d
-                             server-name          ,emacs.d
-                             package-user-dir     (expand-file-name "elpa" ,emacs.d))
-                       (unwind-protect (progn ,@post*)
-                         (plist-put yodel-args :yodel-time
-                                    (string-to-number (format-time-string "%s")))
-                         (message "%s" ,yodel--process-end-text)
-                         (message "%S" yodel-args)))))))
+           (progn
+             ,@pre*
+             ,@(when (plist-get declaration :packages*)
+                 '((yodel-file "./straight-bootstrap-snippet.el"
+                     :save t
+                     :overwrite t
+                     :with*
+                     ";; -*- lexical-binding: t; -*-"
+                     (defvar bootstrap-version)
+                     ;;@TODO: remove once merged in straight.el
+                     (setq straight-repository-user "progfolio"
+                           straight-repository-branch "feat/ref-recipe-keyword")
+                     (let ((bootstrap-file
+                            (expand-file-name
+                             "straight/repos/straight.el/bootstrap.el"
+                             user-emacs-directory))
+                           (bootstrap-version 5))
+                       (unless (file-exists-p bootstrap-file)
+                         (with-current-buffer
+                             (url-retrieve-synchronously
+                              (concat "https://raw.githubusercontent.com/"
+                                      "raxod502/straight.el/develop/install.el")
+                              'silent 'inhibit-cookies)
+                           (goto-char (point-max))
+                           (eval-print-last-sexp)))
+                       (load bootstrap-file nil 'nomessage))
+                     ;;our extensions to straight.el to get formatted
+                     ;;package info @TODO: clean this up.
+                     (defun straight--yodel-package-info ()
+                       "Return pacakge info plist for use with yodel."
+                       (let ((packages '()))
+                         (maphash
+                          (lambda (key val)
+                            (unless (member (intern key)
+                                            (append straight-recipe-repositories
+                                                    '(straight)))
+                              (cl-destructuring-bind
+                                  (&key repo local-repo host &allow-other-keys &aux
+                                        (source (straight-recipe-source key))
+                                        (url
+                                         (when (and repo host)
+                                           (format "https://%s.com/%s"
+                                                   (alist-get host
+                                                              '((github . "github")
+                                                                (gitlab . "gitlab")))
+                                                   repo)))
+                                        (version
+                                         (when local-repo
+                                           (let
+                                               ((default-directory
+                                                  (straight--repos-dir local-repo)))
+                                             (when (file-exists-p default-directory)
+                                               (let* ((info
+                                                       (split-string
+                                                        (straight--process-output
+                                                         "git" "show" "-s"
+                                                         "--format=%H %cs")
+                                                        " "))
+                                                      (commit (car info)))
+                                                 (list
+                                                  :branch
+                                                  (straight-vc-git--local-branch
+                                                   "HEAD")
+                                                  :commit commit
+                                                  :commit-url
+                                                  (when url
+                                                    (pcase host
+                                                      ('github
+                                                       (concat url "/commit/"
+                                                               commit))
+                                                      ('gitlab
+                                                       (concat url "/-/commit/"
+                                                               commit))
+                                                      (_ commit)))
+                                                  :date   (cadr info))))))))
+                                  (nth 2 val)
+                                (push (list :name key :source source :repo repo
+                                            :local-repo local-repo :host host
+                                            :url url :version version)
+                                      packages))))
+                          straight--build-cache)
+                         (nreverse packages)))))))
+           ;; Bind program after :pre* in case yodel-args has been modified.
+           (setq program
+                 (let ((print-level  nil)
+                       (print-length nil)
+                       (print-circle nil))
+                   ;; Ensure default values are present even if not specified.
+                   (setq yodel-args (plist-put yodel-args :user-dir emacs.d)
+                         yodel-args (plist-put yodel-args :executable emacs))
+                   (pp-to-string
+                    ;; The top-level `let' is an intentional local
+                    ;; variable binding. We want users of
+                    ;; `yodel' to have access to their
+                    ;; args within :pre*/:post* programs. Since
+                    ;; we are binding with the package namespace, this
+                    ;; should not overwrite other user bindings.
+                    `(with-demoted-errors "%S"
+                       (require 'yodel)
+                       (let ((yodel-args ',yodel-args))
+                         (setq user-emacs-directory ,emacs.d
+                               default-directory    ,emacs.d
+                               server-name          ,emacs.d
+                               package-user-dir     (expand-file-name "elpa" ,emacs.d))
+                         (unwind-protect (progn
+                                           ;;@TOOD: simplify by moving to yodel-args?
+                                           ,@',(when-let ((packages (plist-get declaration :packages*)))
+                                                 `((load-file "./straight-bootstrap-snippet.el")
+                                                   (mapc #'straight-use-package ',packages)))
+                                           ,@post*)
+                           (plist-put yodel-args :yodel-time
+                                      (string-to-number (format-time-string "%s")))
+                           (message "%s" ,yodel--process-end-text)
+                           (when (plist-get yodel-args :packages*)
+                             (setq yodel-args (plist-put yodel-args :packages
+                                                         (straight--yodel-package-info))))
+                           (message "%S" yodel-args))))))))
          ;; Reset process buffer.
          (with-current-buffer (get-buffer-create yodel-process-buffer)
            (fundamental-mode) ; We want this to wipe out buffer local vars here
