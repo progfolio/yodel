@@ -455,11 +455,11 @@ DECLARATION is accessible within the :post* phase via the locally bound plist, y
          (pre* (plist-get declaration :pre*)))
     `(let ((yodel-args ',declaration))
        (cl-destructuring-bind
-           ( &key clargs formatter interactive pre* post* raw save user-dir
+           ( &key clargs* formatter interactive pre* post* raw save user-dir
              ((:executable emacs) (concat invocation-directory invocation-name))
              &allow-other-keys
              &aux
-             (clargs (append (unless interactive '("--batch")) (or clargs yodel--default-args)))
+             (clargs (append (unless interactive '("--batch")) (or clargs* yodel--default-args)))
              (formatter (or formatter yodel-default-formatter #'yodel-format-as-raw))
              (emacs.d (expand-file-name
                        (or user-dir (make-temp-file "yodel-" 'directory))
