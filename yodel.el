@@ -443,6 +443,8 @@ DECLARATION may be any of the following keywords and their respective values:
       Otherwise, a temporary directory is created and used.
       Unless absolute, paths are expanded relative to the variable
       `temporary-file-directory'.
+  - :clargs*
+      Command line args for the child process.
 
 DECLARATION is accessible within the :post* phase via the locally bound plist, yodel-args."
   (declare (indent defun))
