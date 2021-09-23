@@ -126,6 +126,46 @@ The following anaphoric bindings are available during BODY:
           (buffer-string)))
       yodel-formatters)))
 
+(defun yodel--format-link (format-string name url)
+  "Replace NAME and URL in FORMAT-STRING."
+  (replace-regexp-in-string
+   "%url" url
+   (replace-regexp-in-string "%name" name format-string)))
+
+(defun yodel--package-table-row (package &optional link-format short)
+  "Return formatted table row for PACKAGE.
+LINK-FORMAT is used to format links within the table row.
+It must contain two substitution strings: %name and %url.
+If SHORT is non-nil, abbreviated commits are used in links."
+  (cl-destructuring-bind
+      ( &key version url name source &allow-other-keys
+        &aux
+        ;;@TODO: link directly to branch
+        (link-format (or link-format "[%name](%url)"))
+        (name (if (and version url) (yodel--format-link link-format name url) name))
+        (vc-info
+         (apply #'format
+                `("%-10s|%-10s|%s"
+                  ,@(if version
+                        (cl-destructuring-bind
+                            ( &key commit ((:commit-url url)) date branch
+                              &allow-other-keys
+                              &aux
+                              (abbrev (substring commit 0 10))
+                              (commit
+                               (if url
+                                   (if (and
+                                        (not short)
+                                        (string-match-p "github.com" url))
+                                       url
+                                     (yodel--format-link link-format abbrev url))
+                                 abbrev)))
+                            version
+                          (list branch commit date))
+                      '("nil" "nil" "nil"))))))
+      package
+    (format "|%s|%s|%s|" name vc-info source)))
+
 (eval-and-compile
   (yodel-formatter raw
     "Format report as a raw, readable plist."
