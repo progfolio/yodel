@@ -341,7 +341,7 @@ If SHORT is non-nil, abbreviated commits are used in links."
                                      (line-beginning-position)))))
                    (unless (string-empty-p  stdout) stdout))
          :report (and (forward-line) (read (current-buffer)))
-         :stderr (let ((stderr (buffer-substring (1+ (point)) (1- (point-max)))))
+         :stderr (let ((stderr (buffer-substring (1+ (point)) (point-max))))
                    (unless (string-empty-p (string-trim stderr)) stderr))))
     (error "Report process buffer no longer live")))
 
