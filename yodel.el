@@ -677,6 +677,37 @@ DECLARATION is accessible within the :post* phase via the yodel-args plist."
           :sentinel #'yodel--sentinel)
          (message "Running yodel in directory: %s" emacs.d)))))
 
+;;;###autoload
+(defmacro yodel-parallel (&rest args)
+  "Test in parallel, reporting differences in output.
+ARGS should be of the following form: (TEST... COMMON...)
+
+Each test is a list of unique keywords, which are passed to `yodel'.
+COMMON are remaining keyword val pairs which are appened to each TEST.
+e.g.
+
+\\=(yodel-parallel
+  (:user-dir \"A\" :packages* (example :branch \"develop\"))
+  (:user-dir \"B\" :packages* (example :branch \"bugfix-example\"))
+  :post*
+  (example program))
+
+Will run test A and B with the same :post* program."
+  (let ((tests (let (tests)
+                 (while (and (car args) (not (keywordp (car args))))
+                   (push (append '(yodel) (pop args)) tests))
+                 (nreverse tests)))
+        (common (let ((common))
+                  (dolist (keyword (cl-remove-if-not #'keywordp args) (nreverse common))
+                    (unless (eq keyword :tests*)
+                      (push keyword common)
+                      (push (plist-get args keyword) common))))))
+    `(progn ,@(mapcar (lambda (test)
+                        `(let ((yodel-process-buffer
+                                ,(plist-get (yodel-plist*-to-plist (cdr test))
+                                            :user-dir)))
+                           ,(append test common)))
+                      tests))))
 
 (provide 'yodel)
 ;;; LocalWords:  subprocess MERCHANTABILITY Vollmer elisp Elisp elpa emacs variadic baz eval plist ARGS args dir src formatter pre namespace metaprogram reddit
