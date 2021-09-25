@@ -100,6 +100,30 @@ Used for reformatting the report.")
         (indent-region (point-min) (point-max)))
       (buffer-substring-no-properties (point-min) (point-max)))))
 
+(defun yodel-reformat (formatter)
+  "Reformat report with FORMATTER function."
+  (interactive (progn
+                 (or yodel--report
+                     (user-error "No report associated with current buffer"))
+                 (list
+                  (let* ((candidates
+                          (mapcar
+                           (lambda (fn) (cons
+                                         (format "%s -> %s"
+                                                 (replace-regexp-in-string
+                                                  "yodel-format-as-" ""
+                                                  (symbol-name fn))
+                                                 (car (split-string (documentation fn) "\n")))
+                                         fn))
+                           yodel-formatters))
+                         (selection
+                          (completing-read "formatter: "
+                                           (setq candidates
+                                                 (cl-sort candidates #'string< :key #'car))
+                                           nil 'require-match)))
+                    (alist-get selection candidates nil nil #'equal)))))
+  (funcall formatter yodel--report))
+
 (defmacro yodel-formatter (name description &rest body)
   "Create a yodel formatting function with BODY and NAME.
 Add the function to `yodel-formatters'.
@@ -653,29 +677,6 @@ DECLARATION is accessible within the :post* phase via the yodel-args plist."
           :sentinel #'yodel--sentinel)
          (message "Running yodel in directory: %s" emacs.d)))))
 
-(defun yodel-reformat (formatter)
-  "Reformat report with FORMATTER function."
-  (interactive (progn
-                 (or yodel--report
-                     (user-error "No report associated with current buffer"))
-                 (list
-                  (let* ((candidates
-                          (mapcar
-                           (lambda (fn) (cons
-                                         (format "%s -> %s"
-                                                 (replace-regexp-in-string
-                                                  "yodel-format-as-" ""
-                                                  (symbol-name fn))
-                                                 (car (split-string (documentation fn) "\n")))
-                                         fn))
-                           yodel-formatters))
-                         (selection
-                          (completing-read "formatter: "
-                                           (setq candidates
-                                                 (cl-sort candidates #'string< :key #'car))
-                                           nil 'require-match)))
-                    (alist-get selection candidates nil nil #'equal)))))
-  (funcall formatter yodel--report))
 
 (provide 'yodel)
 ;;; LocalWords:  subprocess MERCHANTABILITY Vollmer elisp Elisp elpa emacs variadic baz eval plist ARGS args dir src formatter pre namespace metaprogram reddit
