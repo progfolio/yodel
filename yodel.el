@@ -89,8 +89,7 @@ Used for reformatting the report.")
                   (funcall (cdr target)))))
             '(("\\(?: \\(:[^z-a]*?\\) \\)";; keywords
                . (lambda ()
-                   (when (eq (get-text-property
-                              (save-excursion (forward-sexp -1) (point)) 'face)
+                   (when (eq (get-text-property (match-beginning 1) 'face)
                              'font-lock-builtin-face)
                      (replace-match
                       (concat "\n\\1" (if (string-suffix-p "*" (match-string 1)) "\n" " "))))))))
