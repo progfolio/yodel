@@ -75,7 +75,8 @@ Used for reformatting the report.")
   "Convert elisp FORM into formatted string."
   (let* ((print-level nil)
          (print-length nil)
-         (print-quoted t))
+         (print-quoted t)
+         (pp-escape-newlines nil))
     (with-temp-buffer
       (insert (pp-to-string form))
       (goto-char (point-min))
