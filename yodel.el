@@ -47,6 +47,7 @@
 
 ;;; Code:
 (require 'cl-lib)
+(require 'pp)
 (eval-when-compile (require 'subr-x))
 
 (defgroup yodel nil
