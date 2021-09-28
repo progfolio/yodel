@@ -29,9 +29,9 @@
 ;;
 ;; Given file "foo" with the following contents:
 ;;
-;; %-----cut---start-----%
+;;--8<---------------cut here---------------start------------->8---
 ;; foo bar baz
-;; %-----cut---end-------%
+;;--8<---------------cut here---------------end--------------->8---
 ;;
 ;; Execute the following:
 ;; 1. do this
