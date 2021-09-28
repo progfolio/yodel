@@ -573,7 +573,7 @@ DECLARATION is accessible within the :post* phase via the yodel-args plist."
                        (load bootstrap-file nil 'nomessage))
                      ;;our extensions to straight.el to get formatted
                      ;;package info @TODO: clean this up.
-                     (defun straight--yodel-package-info ()
+                     (defun yodel--straight-package-info ()
                        "Return pacakge info plist for use with yodel."
                        (let ((packages '()))
                          (maphash
@@ -660,7 +660,7 @@ DECLARATION is accessible within the :post* phase via the yodel-args plist."
                            (message "%s" ,yodel--process-end-text)
                            (when (plist-get yodel-args :packages*)
                              (setq yodel-args (plist-put yodel-args :packages
-                                                         (straight--yodel-package-info))))
+                                                         (yodel--straight-package-info))))
                            (message "%S" yodel-args))))))))
          ;; Reset process buffer.
          (with-current-buffer (get-buffer-create yodel-process-buffer)
