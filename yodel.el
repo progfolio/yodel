@@ -99,7 +99,7 @@ Used for reformatting the report.")
       (flush-lines "\\(?:^[[:space:]]*$\\)")
       (let ((inhibit-message t))
         (indent-region (point-min) (point-max)))
-      (buffer-substring-no-properties (point-min) (point-max)))))
+      (string-trim (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defmacro yodel-formatter (name description &rest body)
   "Create a yodel formatting function with BODY and NAME.
