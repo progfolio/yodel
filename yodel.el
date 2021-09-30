@@ -310,12 +310,12 @@ If SHORT is non-nil, abbreviated commits are used in links."
           (packages (plist-get report :packages)))
       (insert
        (string-join
-        `(,(format "[YODEL](https://github.com/progfolio/yodel) REPORT (%s):"
+        `(,(format "[Yodel](https://github.com/progfolio/yodel) Report (%s):"
                    (format-time-string "%Y-%m-%d %H:%M:%S"
                                        (seconds-to-time (plist-get report :yodel-time))))
           ,(concat fence-start (or (plist-get report :yodel-form) "(yodel)") fence-end)
           ,@(when stdout (list "<details><summary>STDOUT:</summary>"
-                               (concat fence-start (string-trim stdout) fence-end)
+                               (concat fence-start stdout fence-end)
                                "</details>"))
           ,@(when stderr (list "<details><summary>STDERR:</summary>"
                                (concat fence-start stderr fence-end)
