@@ -176,7 +176,7 @@ If SHORT is non-nil, abbreviated commits are used in links."
 ;;@TODO: Decide on :packages* formatting. Footnotes for links? Plain list?
 (eval-and-compile
   (yodel-formatter mailing-list-message
-    "Format report as a plain text email message sutiable for mailing lists."
+    "Format report as a plain text email message."
     (message-mode)
     (cl-flet ((quoted (s)
                 (with-temp-buffer
