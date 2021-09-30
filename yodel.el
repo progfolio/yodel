@@ -197,6 +197,52 @@ If SHORT is non-nil, abbreviated commits are used in links."
     (insert (let (print-level print-length)
               (pp-to-string report)))))
 
+;;@TODO: Decide on :packages* formatting. Footnotes for links? Plain list?
+(eval-and-compile
+  (yodel-formatter mailing-list-message
+    "Format report as a plain text email message sutiable for mailing lists."
+    (cl-flet ((quoted (s)
+                (with-temp-buffer
+                  (with-silent-modifications ;otherwise we're prompted to save modified buffer
+                    (insert s)
+                    (when (fboundp 'message-mode) (message-mode))
+                    (comment-region (point-min) (point-max))
+                    (buffer-string))))
+              (underline ()
+                (insert (make-string (save-excursion (forward-line -1)
+                                                     (- (line-end-position)
+                                                        (line-beginning-position)))
+                                     ?=))))
+      (insert (format "Yodel Report[1] %s\n"
+                (format-time-string "%Y-%m-%d %H:%M:%S"
+                                    (plist-get report :yodel-time))))
+      (underline)
+      (insert "\n\n"
+              (with-temp-buffer
+                (insert (or (plist-get report :yodel-form) "(yodel)"))
+                (when (fboundp 'message-mark-inserted-region)
+                  (message-mark-inserted-region (point-min) (point-max)))
+                (buffer-string))
+              "\n")
+      (when stdout
+        (insert "STDOUT\n")
+        (underline)
+        (insert "\n\n" (quoted stdout) "\n"))
+      (when stderr
+        (insert "STDERR\n")
+        (underline)
+        (insert "\n\n" (quoted stderr) "\n"))
+      (insert "Environment\n")
+      (underline)
+      (insert
+       "\n\n"
+       (mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
+         (list (cons "emacs version" (emacs-version))
+               (cons "system type" system-type))
+         "\n")
+       "\n\n"
+       "[1] https://www.github.com/progfolio/yodel"))))
+
 (eval-and-compile
   (yodel-formatter org
     "Format REPORT in Org syntax."
