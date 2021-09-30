@@ -181,6 +181,7 @@ If SHORT is non-nil, abbreviated commits are used in links."
     (cl-flet ((quoted (s)
                 (with-temp-buffer
                   (with-silent-modifications ;otherwise we're prompted to save modified buffer
+                    (message-mode)
                     (insert s)
                     (comment-region (point-min) (point-max))
                     (buffer-string))))
