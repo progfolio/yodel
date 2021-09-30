@@ -190,7 +190,7 @@ If SHORT is non-nil, abbreviated commits are used in links."
                                                      (- (line-end-position)
                                                         (line-beginning-position)))
                                      ?=))))
-      (insert (format "Yodel Report[1] %s\n"
+      (insert (format "Yodel[1] Report %s\n"
                 (format-time-string "%Y-%m-%d %H:%M:%S"
                                     (plist-get report :yodel-time))))
       (underline)
