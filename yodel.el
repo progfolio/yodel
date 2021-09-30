@@ -196,20 +196,19 @@ If SHORT is non-nil, abbreviated commits are used in links."
       (underline)
       (insert "\n\n"
               (with-temp-buffer
-                (insert (or (plist-get report :yodel-form) "(yodel)"))
+                (insert (plist-get report :yodel-form) "\n")
                 (when (fboundp 'message-mark-inserted-region)
                   (message-mark-inserted-region (point-min) (point-max)))
-                (buffer-string))
-              "\n")
+                (buffer-string)))
       (when stdout
-        (insert "STDOUT\n")
+        (insert "\nSTDOUT\n")
         (underline)
         (insert "\n\n" (quoted stdout) "\n"))
       (when stderr
-        (insert "STDERR\n")
+        (insert "\nSTDERR\n")
         (underline)
         (insert "\n\n" (quoted stderr) "\n"))
-      (insert "Environment\n")
+      (insert "\nEnvironment\n")
       (underline)
       (insert
        "\n\n"
