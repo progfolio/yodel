@@ -383,14 +383,17 @@ If SHORT is non-nil, abbreviated commits are used in links."
       (with-current-buffer buffer
         (goto-char (point-min))
         (list
-         :stdout (let ((stdout (buffer-substring
-                                (point-min)
-                                (and (re-search-forward yodel--process-end-text)
-                                     (line-beginning-position)))))
-                   (unless (string-empty-p  stdout) stdout))
+         :stdout (let ((stdout
+                        (string-trim
+                         (buffer-substring
+                          (point-min)
+                          (and (re-search-forward yodel--process-end-text)
+                               (line-beginning-position))))))
+                   (unless (string-empty-p stdout) stdout))
          :report (and (forward-line) (read (current-buffer)))
-         :stderr (let ((stderr (buffer-substring (1+ (point)) (point-max))))
-                   (unless (string-empty-p (string-trim stderr)) stderr))))
+         :stderr (let ((stderr (string-trim
+                                (buffer-substring (1+ (point)) (point-max)))))
+                   (unless (string-empty-p stderr) stderr))))
     (error "Report process buffer no longer live")))
 
 ;;@HACK:
