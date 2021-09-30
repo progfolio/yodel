@@ -228,11 +228,11 @@ If SHORT is non-nil, abbreviated commits are used in links."
           (packages (plist-get report :packages)))
       (insert
        (string-join
-        `(,(format "* YODEL REPORT [%s]"
+        `(,(format "* Yodel Report [%s]"
                    (format-time-string "%Y-%m-%d %H:%M:%S"
                                        (seconds-to-time (plist-get report :yodel-time))))
-          ,(concat src-start (or (plist-get report :yodel-form) "(yodel)") src-end)
-          ,@(when stdout (list "** STDOUT:" (concat src-start (string-trim stdout) src-end)))
+          ,(concat src-start (plist-get report :yodel-form) src-end)
+          ,@(when stdout (list "** STDOUT:" (concat src-start stdout src-end)))
           ,@(when stderr (list "** STDERR:" (concat src-start stderr src-end)))
           "** Environment"
           ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
