@@ -177,11 +177,11 @@ If SHORT is non-nil, abbreviated commits are used in links."
 (eval-and-compile
   (yodel-formatter mailing-list-message
     "Format report as a plain text email message sutiable for mailing lists."
+    (message-mode)
     (cl-flet ((quoted (s)
                 (with-temp-buffer
                   (with-silent-modifications ;otherwise we're prompted to save modified buffer
                     (insert s)
-                    (when (fboundp 'message-mode) (message-mode))
                     (comment-region (point-min) (point-max))
                     (buffer-string))))
               (underline ()
