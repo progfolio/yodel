@@ -1,6 +1,6 @@
 ;;; yodel-straight.el --- straight.el extensions     -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021  No Wayman
+;; Copyright (C) 2021 Nicholas Vollmer
 
 ;; Author:  Nicholas Vollmer
 ;; URL: https://github.com/progfolio/yodel
