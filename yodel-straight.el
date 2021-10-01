@@ -88,6 +88,5 @@ Each entry is a list form: (URL-REGEXP, URL-REPLACEMENT, COMMIT-URL-FORMATTER)."
              straight--build-cache)
     (nreverse packages)))
 
-
 (provide 'yodel-straight)
 ;;; yodel-straight.el ends here
