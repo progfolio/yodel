@@ -268,30 +268,28 @@ If SHORT is non-nil, abbreviated commits are used in links."
                             (buffer-string))))
       (insert
        (string-join
-         (delq
-          nil
-          `(,(format "# [Yodel](https://github.com/progfolio/yodel) Report (%s):"
-                     (format-time-string "%Y-%m-%d %H:%M:%S"
-                                         (seconds-to-time (plist-get report :yodel-time))))
-            ;;use four spaces because old reddit doesn't render code fences
-            ,(indent (plist-get report :yodel-form))
-            ,@(when stdout (list "## STDOUT:" (indent stdout)))
-            ,@(when stderr (list "## STDERR:" (indent stderr)))
-            "## Environment"
-            ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
-                        (list (cons "**emacs version**" (emacs-version))
-                              (cons "**system type**" system-type))
-                        "\n")
-            ,@(when-let ((packages (plist-get report :packages)))
-                (concat
-                 "### Packages\n\n"
-                 "| Name    | Branch  | Commit  | Date    | Source |\n"
-                 "|---------|---------|---------|---------|--------|\n"
-                 (mapconcat (lambda (p) (yodel--package-table-row p 'short))
-                            (cl-sort (copy-tree (plist-get report :packages))
-                                     #'string<
-                                     :key (lambda (it) (plist-get it :name)))
-                            "\n")))))
+         `(,(format "# [Yodel](https://github.com/progfolio/yodel) Report (%s):"
+                    (format-time-string "%Y-%m-%d %H:%M:%S"
+                                        (seconds-to-time (plist-get report :yodel-time))))
+           ;;use four spaces because old reddit doesn't render code fences
+           ,(indent (plist-get report :yodel-form))
+           ,@(when stdout (list "## STDOUT:" (indent stdout)))
+           ,@(when stderr (list "## STDERR:" (indent stderr)))
+           "## Environment"
+           ,(mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
+                       (list (cons "**emacs version**" (emacs-version))
+                             (cons "**system type**" system-type))
+                       "\n")
+           ,(when-let ((packages (plist-get report :packages)))
+               (concat
+                "### Packages\n\n"
+                "| Name    | Branch  | Commit  | Date    | Source |\n"
+                "|---------|---------|---------|---------|--------|\n"
+                (mapconcat (lambda (p) (yodel--package-table-row p nil 'short))
+                           (cl-sort (copy-tree (plist-get report :packages))
+                                    #'string<
+                                    :key (lambda (it) (plist-get it :name)))
+                           "\n"))))
          "\n\n")))
     (when (plist-get report :packages)
       (when (fboundp 'markdown-cycle)
