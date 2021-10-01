@@ -623,6 +623,14 @@ DECLARATION is accessible within the :post* phase via the yodel-args plist."
                        (load bootstrap-file nil 'nomessage))
                      ;;our extensions to straight.el to get formatted
                      ;;package info @TODO: clean this up.
+                     (defvar yodel--straight-host-url-formatters
+                       '(("\\(git.savannah.gnu.org/\\)\\(git\\)" "\\1c\\2"
+                          (lambda (url commit) (concat url "/commit/?id=" commit)))
+                         ("git.sr.ht"  identity (lambda (url commit) (concat url "/commit/" commit)))
+                         ("github.com" identity (lambda (url commit) (concat url "/commit/" commit)))
+                         ("gitlab.com" identity (lambda (url commit) (concat url "/-/commit/" commit))))
+                       "List of URL formatters for various hosts.
+Each entry is a list form: (URL-REGEXP, URL-REPLACEMENT, COMMIT-URL-FORMATTER).")
                      (defun yodel--straight-package-info ()
                        "Return pacakge info plist for use with yodel."
                        (let ((packages '()))
@@ -634,13 +642,6 @@ DECLARATION is accessible within the :post* phase via the yodel-args plist."
                               (cl-destructuring-bind
                                   (&key repo local-repo host &allow-other-keys &aux
                                         (source (straight-recipe-source key))
-                                        (url
-                                         (when (and repo host)
-                                           (format "https://%s.com/%s"
-                                                   (alist-get host
-                                                              '((github . "github")
-                                                                (gitlab . "gitlab")))
-                                                   repo)))
                                         (version
                                          (when local-repo
                                            (let
@@ -656,20 +657,28 @@ DECLARATION is accessible within the :post* phase via the yodel-args plist."
                                                       (commit (car info)))
                                                  (list
                                                   :branch
-                                                  (straight-vc-git--local-branch
-                                                   "HEAD")
+                                                  (straight-vc-git--local-branch "HEAD")
                                                   :commit commit
-                                                  :commit-url
-                                                  (when url
-                                                    (pcase host
-                                                      ('github
-                                                       (concat url "/commit/"
-                                                               commit))
-                                                      ('gitlab
-                                                       (concat url "/-/commit/"
-                                                               commit))
-                                                      (_ commit)))
-                                                  :date   (cadr info))))))))
+                                                  :date   (cadr info)))))))
+                                        (url
+                                         (when repo
+                                           (let ((repo
+                                                  (if host (format "https://%s.com/%s"
+                                                                   (alist-get
+                                                                    host
+                                                                    '((github . "github")
+                                                                      (gitlab . "gitlab")))
+                                                                   repo)
+                                                    repo)))
+                                             (if (string-match-p "https?:" repo)
+                                                 (cl-some (lambda (formatter)
+                                                            (when (string-match-p (car formatter) repo)
+                                                              (let ((formatted (replace-regexp-in-string (car formatter) (cadr formatter) repo)))
+                                                                (setq version (plist-put version :commit-url
+                                                                                         (funcall (caddr formatter)
+                                                                                                  formatted (plist-get version :commit))))
+                                                                formatted)))
+                                                          yodel--straight-host-url-formatters))))))
                                   (nth 2 val)
                                 (push (list :name key :source source :repo repo
                                             :local-repo local-repo :host host
