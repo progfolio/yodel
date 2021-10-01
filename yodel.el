@@ -673,6 +673,7 @@ DECLARATION is accessible within the :post* phase via the yodel-args plist."
           :sentinel #'yodel--sentinel)
          (message "Running yodel in directory: %s" emacs.d)))))
 
+;;@TODO: Ensure unique user-dir for each test?
 ;;;###autoload
 (defmacro yodel-parallel (&rest args)
   "Test in parallel, reporting differences in output.
