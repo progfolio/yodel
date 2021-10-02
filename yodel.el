@@ -217,7 +217,8 @@ If SHORT is non-nil, abbreviated commits are used in links."
                (cons "system type" system-type))
          "\n")
        "\n\n"
-       "[1] https://www.github.com/progfolio/yodel"))))
+       "[1] https://www.github.com/progfolio/yodel"))
+    (set-buffer-modified-p nil))
 
 (eval-and-compile
   (yodel-formatter org
