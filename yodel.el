@@ -173,7 +173,6 @@ If SHORT is non-nil, abbreviated commits are used in links."
     (insert (let (print-level print-length)
               (pp-to-string report)))))
 
-;;@TODO: Decide on :packages* formatting. Footnotes for links? Plain list?
 (eval-and-compile
   (yodel-formatter mailing-list-message
     "Format report as a plain text email message."
@@ -215,10 +214,26 @@ If SHORT is non-nil, abbreviated commits are used in links."
        (mapconcat (lambda (el) (format "- %s: %s" (car el) (cdr el)))
          (list (cons "emacs version" (emacs-version))
                (cons "system type" system-type))
-         "\n")
-       "\n\n"
-       "[1] https://www.github.com/progfolio/yodel"))
-    (set-buffer-modified-p nil))
+         "\n"))
+      (when-let ((packages (plist-get report :packages)))
+        (insert "\n\nPackages\n")
+        (underline)
+        (insert "\n")
+        (mapc (lambda (package)
+                (let ((longest (number-to-string
+                                (length (plist-get
+                                         (car (cl-sort (copy-tree packages)
+                                                       #'string>
+                                                       :key (lambda (p) (plist-get p :name))))
+                                         :name)))))
+                  (insert (format (concat "\n- %-" longest "s %s")
+                                  (plist-get package :name)
+                                  (or (plist-get (plist-get package :version) :commit-url)
+                                      (plist-get package :url))))))
+          (cl-sort (copy-tree packages) #'string< :key (lambda (p) (plist-get  p :name))))
+        "\n\n"
+        "[1] https://www.github.com/progfolio/yodel"))
+    (set-buffer-modified-p nil)))
 
 (eval-and-compile
   (yodel-formatter org
