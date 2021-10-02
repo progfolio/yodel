@@ -297,15 +297,15 @@ If SHORT is non-nil, abbreviated commits are used in links."
                              (cons "**system type**" system-type))
                        "\n")
            ,(when-let ((packages (plist-get report :packages)))
-               (concat
-                "### Packages\n\n"
-                "| Name    | Branch  | Commit  | Date    | Source |\n"
-                "|---------|---------|---------|---------|--------|\n"
-                (mapconcat (lambda (p) (yodel--package-table-row p nil 'short))
-                           (cl-sort (copy-tree (plist-get report :packages))
-                                    #'string<
-                                    :key (lambda (it) (plist-get it :name)))
-                           "\n"))))
+              (concat
+               "### Packages\n\n"
+               "| Name    | Branch  | Commit  | Date    | Source |\n"
+               "|---------|---------|---------|---------|--------|\n"
+               (mapconcat (lambda (p) (yodel--package-table-row p nil 'short))
+                          (cl-sort (copy-tree (plist-get report :packages))
+                                   #'string<
+                                   :key (lambda (it) (plist-get it :name)))
+                          "\n"))))
          "\n\n")))
     (when (plist-get report :packages)
       (when (fboundp 'markdown-cycle)
