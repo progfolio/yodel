@@ -706,20 +706,15 @@ e.g.
   (example program))
 
 Will run test A and B with the same :post* program."
-  (let ((tests (let (tests)
+  (let ((tests (let (forms)
                  (while (and (car args) (not (keywordp (car args))))
-                   (push (append '(yodel) (pop args)) tests))
-                 (nreverse tests)))
-        (common (let ((common))
-                  (dolist (keyword (cl-remove-if-not #'keywordp args) (nreverse common))
-                    (unless (eq keyword :tests*)
-                      (push keyword common)
-                      (push (plist-get args keyword) common))))))
+                   (push (append '(yodel) (pop args)) forms))
+                 (nreverse forms))))
     `(progn ,@(mapcar (lambda (test)
                         `(let ((yodel-process-buffer
                                 ,(plist-get (yodel-plist*-to-plist (cdr test))
                                             :user-dir)))
-                           ,(append test common)))
+                           ,(append test args)))
                       tests))))
 
 (provide 'yodel)
