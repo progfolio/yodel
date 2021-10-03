@@ -278,9 +278,8 @@ If SHORT is non-nil, abbreviated commits are used in links."
     (when (fboundp 'markdown-mode) (markdown-mode))
     (cl-flet ((indent (s) (with-temp-buffer
                             (insert s)
-                            (let ((fill-prefix "    ")
-                                  (inhibit-message t))
-                              (indent-region (point-min) (point-max)))
+                            (let ((inhibit-message t))
+                              (indent-rigidly (point-min) (point-max) 4))
                             (buffer-string))))
       (insert
        (string-join
