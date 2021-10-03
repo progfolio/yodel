@@ -78,6 +78,7 @@ Yodel offers out-of-the-box formatters for:
 - Github
 - Reddit
 - Org
+- Mailing lists
 
 ** Yodel-ay-hee-how?
 Yodel is currently only available via this repository.
