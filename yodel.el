@@ -231,8 +231,8 @@ If SHORT is non-nil, abbreviated commits are used in links."
                                   (or (plist-get (plist-get package :version) :commit-url)
                                       (plist-get package :url))))))
           (cl-sort (copy-tree packages) #'string< :key (lambda (p) (plist-get  p :name))))
-        "\n\n"
-        "[1] https://www.github.com/progfolio/yodel"))
+        "\n\n")
+      (insert "\n\n[1] https://www.github.com/progfolio/yodel"))
     (set-buffer-modified-p nil)))
 
 (eval-and-compile
