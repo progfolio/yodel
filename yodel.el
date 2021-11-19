@@ -562,8 +562,9 @@ DECLARATION may be any of the following keywords and their respective values:
       Output will be printed to `yodel-process-buffer'
       Otherwise, the subprocess will be interactive.
 
-  - :save Boolean
-      If non-nil, the :user-dir is not deleted after exiting.
+  - :save Boolean or String
+      If a string, use that string as the :user-dir argument and save.
+      If otherwise non-nil, the :user-dir is not deleted after exiting.
       Otherwise, it is immediately removed after the test is run.
 
   - :executable String
@@ -603,7 +604,8 @@ DECLARATION is accessible within the :post* phase via the yodel-args plist."
              (clargs (append (unless interactive '("--batch")) (or clargs* yodel--default-args)))
              (formatter (or formatter yodel-default-formatter #'yodel-format-as-raw))
              (emacs.d (expand-file-name
-                       (or user-dir (make-temp-file "yodel-" 'directory))
+                       (or user-dir (and (stringp save) save)
+                           (make-temp-file "yodel-" 'directory))
                        temporary-file-directory))
              program)
            yodel-args
