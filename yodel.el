@@ -696,7 +696,7 @@ DECLARATION is accessible within the :post* phase via the yodel-args plist."
   "Test in parallel, reporting differences in output.
 ARGS should be of the following form: (TEST... COMMON...)
 
-Each test is a list of unique keywords, which are passed to `yodel'.
+Each TEST is a list of keywords and their values, which are passed to `yodel'.
 COMMON are remaining keyword val pairs which are appened to each TEST.
 e.g.
 
