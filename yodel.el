@@ -713,8 +713,10 @@ Will run test A and B with the same :post* program."
                  (nreverse forms))))
     `(progn ,@(mapcar (lambda (test)
                         `(let ((yodel-process-buffer
-                                ,(plist-get (yodel-plist*-to-plist (cdr test))
-                                            :user-dir)))
+                                ,(let ((plist (yodel-plist*-to-plist (cdr test))))
+                                   (or (plist-get plist :user-dir)
+                                       (when-let ((save (plist-get plist :save)))
+                                         (and (stringp save) save))))))
                            ,(append test args)))
                       tests))))
 
