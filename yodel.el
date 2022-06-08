@@ -463,6 +463,29 @@ If SHORT is non-nil, abbreviated commits are used in links."
           (unless save
             (when (file-exists-p emacs.d) (delete-directory emacs.d 'recursive))))))))
 
+;;@TODO: the timing of delays is hacky and not quite right.
+;;;###autoload
+(defun yodel-simulate-keys (&rest keys)
+  "Simulate key events for each element of KEYS.
+Elements of KEYS may be:
+  - a string
+    simulated pressing each key in the string
+  - a cons cell of the form (N . keys) or (keys . N)
+    N is the number of seconds to wait before simulating the key."
+  (let ((delay 0.01))
+    (dolist (spec keys)
+      (let ((keyseq nil))
+        (pcase spec
+          ((pred stringp) (setq
+                           delay (+ delay 0.01)
+                           keyseq (listify-key-sequence spec)))
+          (`(,car . ,cdr)
+           (let ((carnump (numberp car)))
+             (setq delay (+ delay (if carnump car cdr))
+                   keyseq (listify-key-sequence (if carnump cdr car)))))
+          (_ (user-error "Malformed key spec: %S" spec)))
+        (run-at-time delay nil (lambda () (setq unread-command-events keyseq)))))))
+
 ;;;###autoload
 (defmacro yodel-file (path &rest args)
   "Create file at PATH and manipulate it according to ARGS.
