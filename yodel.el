@@ -58,7 +58,7 @@
 (defconst yodel--process-end-text "YODEL--PROCESS-END"
   "String denoting end of process output and start of report form.")
 
-(defvar yodel--default-args `("-Q" "-L" ,(file-name-directory (locate-library "yodel")) "--eval")
+(defvar yodel--default-args `("-Q" "--eval" "(setq debug-on-error t)" "-L" ,(file-name-directory (locate-library "yodel")) "--eval")
   "Arguments passed to the Emacs executable when testing.")
 
 (defvar yodel-process-buffer "*yodel*"
@@ -71,6 +71,8 @@
 (defvar-local yodel--report nil
   "Report data structure.
 Used for reformatting the report.")
+
+(defvar-local yodel-args nil)
 
 (defun yodel--pretty-print (form)
   "Convert elisp FORM into formatted string."
@@ -132,6 +134,31 @@ The following anaphoric bindings are available during BODY:
   (replace-regexp-in-string
    "%url" url
    (replace-regexp-in-string "%name" name format-string)))
+
+(defvar yodel--host-url-formatters
+  '(("github.com" identity (lambda (url commit)
+                             (concat (replace-regexp-in-string "\\.git$" "" url) "/commit/" commit)))
+    ("gitlab.com" identity (lambda (url commit) (concat url "/-/commit/" commit)))
+    ("git.sr.ht"  identity (lambda (url commit) (concat url "/commit/" commit)))
+    ("\\(git.savannah.gnu.org/\\)\\(git\\)" "\\1c\\2"
+     (lambda (url commit) (concat url "/commit/?id=" commit))))
+  "List of URL formatters for various hosts.
+Each entry is a list form: (URL-REGEXP, URL-REPLACEMENT, COMMIT-URL-FORMATTER).")
+
+(defun yodel--format-urls (repo commit &optional host)
+  "Return pair of URLS of form (REPO . COMMIT) considering HOST."
+  (when host (setq repo (format "https://%s.com/%s"
+                                (alist-get host '((github . "github")
+                                                  (gitlab . "gitlab")))
+                                repo)))
+  (if (string-match-p "https?:" repo)
+      (cl-some (lambda (formatter)
+                 (when (string-match-p (car formatter) repo)
+                   (let ((formatted
+                          (replace-regexp-in-string (car formatter)
+                                                    (cadr formatter) repo)))
+                     (cons formatted (funcall (caddr formatter) formatted commit)))))
+               yodel--host-url-formatters)))
 
 (defun yodel--package-table-row (package &optional link-format short)
   "Return formatted table row for PACKAGE.
@@ -586,9 +613,9 @@ DECLARATION may be any of the following keywords and their respective values:
 
   - :packages*
       Packages which are installed in the test enviornment.
-      Packages are installed via straight.el, which see for recipe format.
+      Packages are installed via elpaca.el, which see for recipe format.
 
-DECLARATION is accessible within the :post* phase via the yodel-args plist."
+DECLARATION is accessible within the :post* phase via the `yodel-args' plist."
   (declare (indent 0))
   (let* ((declaration (yodel-plist*-to-plist
                        (append declaration
@@ -614,65 +641,40 @@ DECLARATION is accessible within the :post* phase via the yodel-args plist."
          (let ((default-directory emacs.d))
            (progn
              ,@pre*
-             ,@(when (plist-get declaration :packages*)
-                 '((yodel-file "./straight-bootstrap-snippet.el"
-                     :save t
-                     :overwrite t
-                     :with*
-                     ";; -*- lexical-binding: t; -*-"
-                     (defvar bootstrap-version)
-                     ;;@TODO: remove once merged in straight.el
-                     (setq straight-repository-user "progfolio"
-                           straight-repository-branch "feat/ref-recipe-keyword")
-                     (let ((bootstrap-file
-                            (expand-file-name
-                             "straight/repos/straight.el/bootstrap.el"
-                             user-emacs-directory))
-                           (bootstrap-version 5))
-                       (unless (file-exists-p bootstrap-file)
-                         (with-current-buffer
-                             (url-retrieve-synchronously
-                              (concat "https://raw.githubusercontent.com/"
-                                      "raxod502/straight.el/develop/install.el")
-                              'silent 'inhibit-cookies)
-                           (goto-char (point-max))
-                           (eval-print-last-sexp)))
-                       (load bootstrap-file nil 'nomessage))
-                     (require 'yodel-straight)))))
-           ;; Bind program after :pre* in case yodel-args has been modified.
-           (setq program
-                 (let ((print-level  nil)
-                       (print-length nil)
-                       (print-circle nil))
-                   ;; Ensure default values are present even if not specified.
-                   (setq yodel-args (plist-put yodel-args :user-dir emacs.d)
-                         yodel-args (plist-put yodel-args :executable emacs))
-                   (pp-to-string
-                    ;; The top-level `let' is an intentional local
-                    ;; variable binding. We want users of
-                    ;; `yodel' to have access to their
-                    ;; args within :pre*/:post* programs. Since
-                    ;; we are binding with the package namespace, this
-                    ;; should not overwrite other user bindings.
-                    `(with-demoted-errors "%S"
-                       (require 'yodel)
-                       (let ((yodel-args ',yodel-args))
-                         (setq user-emacs-directory ,emacs.d
+             ;; Bind program after :pre* in case yodel-args has been modified.
+             (setq program
+                   (let ((print-level  nil)
+                         (print-length nil)
+                         (print-circle nil))
+                     ;; Ensure default values are present even if not specified.
+                     (setq yodel-args (plist-put yodel-args :user-dir emacs.d)
+                           yodel-args (plist-put yodel-args :executable emacs))
+                     (pp-to-string
+                      ;; The top-level `let' is an intentional local
+                      ;; variable binding. We want users of
+                      ;; `yodel' to have access to their
+                      ;; args within :pre*/:post* programs. Since
+                      ;; we are binding with the package namespace, this
+                      ;; should not overwrite other user bindings.
+                      `(with-demoted-errors "%S"
+                         (require 'yodel)
+                         (setq yodel-args           ',yodel-args
+                               user-emacs-directory ,emacs.d
                                default-directory    ,emacs.d
                                server-name          ,emacs.d
                                package-user-dir     (expand-file-name "elpa" ,emacs.d))
                          (unwind-protect (progn
                                            ;;@TOOD: simplify by moving to yodel-args?
                                            ,@',(when-let ((packages (plist-get declaration :packages*)))
-                                                 `((load-file "./straight-bootstrap-snippet.el")
-                                                   (mapc #'straight-use-package ',packages)))
+                                                 `((require 'yodel-elpaca)
+                                                   (apply #'yodel-elpaca--install ',packages)))
                                            ,@post*)
                            (plist-put yodel-args :yodel-time
                                       (string-to-number (format-time-string "%s")))
                            (message "%s" ,yodel--process-end-text)
                            (when (plist-get yodel-args :packages*)
                              (setq yodel-args (plist-put yodel-args :packages
-                                                         (yodel-straight--package-info))))
+                                                         (yodel-elpaca--package-info))))
                            (message "%S" yodel-args))))))))
          ;; Reset process buffer.
          (with-current-buffer (get-buffer-create yodel-process-buffer)
