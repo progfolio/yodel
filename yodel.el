@@ -672,7 +672,7 @@ DECLARATION is accessible within the :post* phase via the `yodel-args' plist."
                            (plist-put yodel-args :yodel-time
                                       (string-to-number (format-time-string "%s")))
                            (message "%s" ,yodel--process-end-text)
-                           (when (plist-get yodel-args :packages*)
+                           (when (and (not ,interactive) (plist-get yodel-args :packages*))
                              (setq yodel-args (plist-put yodel-args :packages
                                                          (yodel-elpaca--package-info))))
                            (message "%S" yodel-args))))))))
