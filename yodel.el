@@ -1,6 +1,6 @@
 ;;; yodel.el --- Communicable Elisp                    -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2023 Nicholas Vollmer
+;; Copyright (C) 2021-2024 Nicholas Vollmer
 
 ;; Author:  Nicholas Vollmer
 ;; URL: https://github.com/progfolio/yodel
